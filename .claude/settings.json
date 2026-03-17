@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(node -e \"require\\(''./routes/analyze''\\); console.log\\(''OK''\\)\")",
+      "Bash(node -e \"const m = require\\(''exa-js''\\); console.log\\(typeof m, typeof m.default, typeof m.Exa\\)\")",
+      "Bash(node -e \":*)"
+    ]
+  }
+}
