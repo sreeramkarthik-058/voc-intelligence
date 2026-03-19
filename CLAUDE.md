@@ -13,6 +13,7 @@ executive presentations as .pptx files.
 - Phase 3 — PDF and plain-text export ✅
 - Phase 4 — Executive presentation agent (.pptx generation + in-browser viewer) ✅
 - Phase 4 upgraded — Futuristic theme system, 8 slide types, template upload ✅
+- Phase 4b — Results page redesign: tabbed layout, action bar, mobile responsive, branding cleanup ✅
 - Phase 5 — Deployment (Render / Railway / Fly.io)
 
 ## Tech stack
@@ -40,6 +41,17 @@ executive presentations as .pptx files.
 - Calls Claude Haiku with a JSON-only prompt; parses structured response
 - Exa search: called once per identified theme if `EXA_API_KEY` is set; non-fatal if missing
 - Returns `{ success, analysisType, data, marketResearch, metadata }`
+
+### AI prompt schema (all three prompts)
+All prompts return JSON only — no markdown fences. Key fields:
+- `executiveSummary` — 2–4 sentence top-level summary (all analysis types); used by Overview tab
+- `topFindings` — array of `{ text: string, severity: "critical"|"moderate"|"info" }` objects (themes / both); used by Overview tab finding cards
+- `emotionalTone.tags` — string array of emotion labels e.g. `["Frustrated","Hopeful"]` (sentiment / both); used by Sentiment tab tone pills
+- `themes` (themes type): array of `{ name, description, frequency, sentiment, keyInsights[], exampleQuotes[] }`
+- `themes` (both type): object with `{ summary, list[], topFindings[], recommendations[] }`
+- `sentiment.breakdown` — `{ positive, negative, neutral }` percentages summing to 100
+- `notableQuotes` — `{ positive: [], negative: [] }` verbatim quotes; used by Voices tab
+- Backward-compat: `normalizeFindings()` in app.js converts old string-array `topFindings` to `[{text,severity}]`
 
 ## Presentation agent (routes/presentation.js)
 - `POST /api/presentation` — receives `{ report, instructions, customTheme? }`
@@ -131,6 +143,15 @@ All colors are passed as a theme object; `buildColors(theme)` maps them to a `c`
 - Logo: amber-to-purple gradient 36px rounded square
 - Typography: 0.9rem base (~14.4px), line-height 1.65 (~24px); section labels: 0.72rem uppercase + horizontal divider extending right
 - Outer padding: 28px; inner card padding: 20px
+- Header: title "Customer Sentiment Analysis" + tagline "Skim through your customer responses to find what really matters"; tagline hidden on report step via JS (`goToStep` toggles `.hidden` on `#header-tagline`); on screens ≤480px tagline is hidden via CSS (`display:none`)
+- Footer: `© 2025 Customer Sentiment Analysis` — no "Powered by" attribution anywhere in the UI
+- No "Powered by Claude" or "Powered by Claude Haiku" text anywhere — not in header, footer, or any visible UI element
+
+## Responsive design (public/styles.css)
+- Two breakpoints: `≤768px` (tablet) and `≤480px` (mobile/phone, including 375px iPhone)
+- Tablet (≤768px): single-col analysis options, tighter padding, 2-col voice quotes grid, tab bar scrollable
+- Mobile (≤480px): tagline hidden via CSS, step labels hidden, cards stack, metric cards single-col, action bar full-width stacked, report tab bar horizontally scrollable with `overflow-x: auto` and `-webkit-overflow-scrolling: touch`, presentation form single-col, all CTA buttons full-width
+- Report tab bar NEVER wraps — tabs are `white-space: nowrap; flex-shrink: 0` with `overflow-x: auto` on parent
 
 ## Animations (all wrapped in prefers-reduced-motion)
 - `fadeUp` — report sections fade + translate in on render
@@ -144,6 +165,53 @@ All colors are passed as a theme object; `buildColors(theme)` maps them to a `c`
 - ARIA roles: tabs (`role="tab"`, `aria-selected`, `aria-controls`), alert banner (`role="alert"`), loading section (`aria-live`)
 - No colour-only information: all badges and states have text labels
 - `prefers-reduced-motion` respected for all animations
+
+## Results page — tabbed layout (public/app.js + public/index.html + public/styles.css)
+
+### Flow after analysis completes
+1. `runAnalysis()` calls `renderReportTabs(json)`, `showActionBar()`, `showReportTabs()`
+2. `showPresentationSection()` is NOT called automatically — only when user clicks "Generate Presentation" in the action bar
+
+### Action bar (`#action-bar`)
+- Hidden by default; revealed after analysis via `showActionBar()`
+- Left: **Generate Presentation** (amber primary button) — triggers `showPresentationSection()`
+- Right: **Export PDF**, **Plain Text**, **New Analysis** (ghost/outline buttons)
+- `exportPDF()` temporarily adds `.pdf-visible` to all hidden tab panels so html2pdf captures all content, then removes it
+- New Analysis resets wizard to step 1 and hides action bar + tabs container
+
+### Tab container (`#report-tabs-container`)
+- Hidden by default; revealed after analysis via `showReportTabs()`
+- Meta row (`#report-tab-meta`): analysis type badge + source filename + timestamp
+- Tab bar: 5 tabs with `role="tablist"`, `role="tab"`, `aria-selected`, `aria-controls`; arrow-key keyboard navigation via `initReportTabs()`
+- `switchReportTab(tabId)` — updates `aria-selected`, `tabindex`, and panel `.active` class
+
+### 5 tabs and their content
+| Tab | ID | Content |
+|---|---|---|
+| Overview | `tab-panel-overview` | Executive summary (amber left-border block) + top findings (severity cards) + recommendations (numbered badges) |
+| Themes | `tab-panel-themes` | Themes summary paragraph + theme cards grid (reuses `buildThemeCard()`); "not included" empty state for sentiment-only |
+| Sentiment | `tab-panel-sentiment` | Score/breakdown bars (reuses `buildSentimentOverviewHTML()`) + drivers grid + emotional tone tag pills; "not included" for themes-only |
+| Voices | `tab-panel-voices` | Notable quotes as cards (`voice-quote-card`); falls back to theme `exampleQuotes` for themes-only |
+| Market | `tab-panel-market` | Exa market research (reuses `renderMarketResearch()`); friendly empty state if no EXA_API_KEY |
+
+### Key helper functions (public/app.js)
+- `renderReportTabs(report)` — main dispatcher; populates meta + calls all 5 tab renderers
+- `buildTabSection(title, content, rawNode)` — wraps content in `.tab-section` with `.tab-section-label` + `::after` divider
+- `tabEmpty(msg, sub)` — returns empty-state HTML (`.tab-empty` + `.tab-empty-sub`)
+- `normalizeFindings(findings)` — backward-compat: converts `string[]` or `{text,severity}[]` → `{text,severity}[]`
+
+### CSS components for results page (public/styles.css)
+- `.action-bar` / `.action-bar-right` — flex layout, hidden by default
+- `.report-tabs-container` / `.report-tab-bar-wrap` / `.report-tab-meta` — container + meta row
+- `.report-tab` — amber active underline, `aria-selected` driven, focus-visible outline
+- `.report-tab-panel` (`display:none`) / `.active` (`display:block`) / `.pdf-visible` (`display:block !important`)
+- `.tab-section-label::after` — horizontal rule extending to right edge
+- `.finding-card.finding-critical/moderate/info` — colored left border + matching dot
+- `.rec-badge` — amber numbered circle
+- `.tone-tags` / `.tone-tag` — purple pill badges
+- `.voice-quotes-grid` / `.voice-quote-card` — quote cards with decorative `"` mark
+- `.tab-empty` / `.tab-empty-sub` — centered empty state
+- Full dark mode variants for all above; responsive overrides at ≤768px and ≤480px
 
 ## Metric cards (public/app.js — renderMetricCards)
 - Shown at the top of the report panel after analysis completes
@@ -173,7 +241,10 @@ All colors are passed as a theme object; `buildColors(theme)` maps them to a `c`
 ## Current state
 - Core analysis working — themes, sentiment, market research via Exa
 - Presentation agent upgraded — 8 slide types, futuristic themes, template upload
-- UI redesigned — white base, amber + purple accents, structured presentation form
+- UI redesigned — white base, amber + purple accents, tabbed report with action bar
+- Results page: tabbed interface (Overview / Themes / Sentiment / Voices / Market), metric cards, action bar
+- Branding: "Customer Sentiment Analysis" throughout; no "Powered by Claude" anywhere; footer is "© 2025 Customer Sentiment Analysis"
+- Fully responsive: tablet (≤768px) and mobile (≤480px / 375px iPhone) breakpoints
 - GitHub repo live at github.com/sreeramkarthik-058/voc-intelligence
 - Deployed: not yet — Phase 5 pending
 

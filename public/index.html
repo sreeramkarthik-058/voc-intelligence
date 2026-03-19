@@ -21,7 +21,7 @@
         </div>
         <div class="logo-text">
           <span class="logo-title">Customer Sentiment Analysis</span>
-          <span class="logo-sub">Powered by Claude</span>
+          <span class="logo-sub" id="header-tagline">Skim through your customer responses to find what really matters</span>
         </div>
       </div>
 
@@ -261,30 +261,67 @@ Example:
     <!-- ── STEP 3: Report ─────────────────────────────────── -->
     <section class="step-panel" id="panel-report" aria-label="Analysis report">
 
-      <!-- Metric summary cards (shown after analysis) -->
+      <!-- Metric summary cards -->
       <div id="metrics-row" class="metrics-row hidden" aria-label="Key metrics"></div>
 
-      <!-- Toolbar -->
-      <div class="report-toolbar">
-        <button class="btn btn-ghost btn-sm" id="new-analysis-btn" type="button" aria-label="Start a new analysis">
-          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
-          New Analysis
+      <!-- Action bar -->
+      <div class="action-bar hidden" id="action-bar">
+        <button class="btn btn-primary" id="action-pres-btn" type="button" aria-label="Generate executive presentation">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd"/></svg>
+          Generate Presentation
         </button>
-        <div class="export-group">
-          <span class="export-label" id="export-label">Export:</span>
-          <button class="btn btn-outline btn-sm" id="export-pdf-btn" type="button" aria-label="Export report as PDF" aria-describedby="export-label">
+        <div class="action-bar-right">
+          <button class="btn btn-outline btn-sm" id="export-pdf-btn" type="button" aria-label="Export report as PDF">
             <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/></svg>
-            PDF
+            Export PDF
           </button>
-          <button class="btn btn-outline btn-sm" id="export-txt-btn" type="button" aria-label="Export report as plain text" aria-describedby="export-label">
+          <button class="btn btn-outline btn-sm" id="export-txt-btn" type="button" aria-label="Export report as plain text">
             <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
             Plain Text
+          </button>
+          <button class="btn btn-ghost btn-sm" id="new-analysis-btn" type="button" aria-label="Start a new analysis">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+            New Analysis
           </button>
         </div>
       </div>
 
-      <!-- Report content -->
-      <div id="report-content" aria-live="polite"></div>
+      <!-- Tabbed report -->
+      <div class="report-tabs-container hidden" id="report-tabs-container">
+        <div class="report-tab-bar-wrap">
+          <div class="report-tab-meta" id="report-tab-meta"></div>
+          <div class="report-tab-bar" role="tablist" aria-label="Analysis sections">
+            <button class="report-tab active" role="tab" aria-selected="true"
+              aria-controls="tab-panel-overview" id="rtab-overview"
+              data-tab="overview" tabindex="0">Overview</button>
+            <button class="report-tab" role="tab" aria-selected="false"
+              aria-controls="tab-panel-themes" id="rtab-themes"
+              data-tab="themes" tabindex="-1">Themes</button>
+            <button class="report-tab" role="tab" aria-selected="false"
+              aria-controls="tab-panel-sentiment" id="rtab-sentiment"
+              data-tab="sentiment" tabindex="-1">Sentiment</button>
+            <button class="report-tab" role="tab" aria-selected="false"
+              aria-controls="tab-panel-voices" id="rtab-voices"
+              data-tab="voices" tabindex="-1">Voices</button>
+            <button class="report-tab" role="tab" aria-selected="false"
+              aria-controls="tab-panel-market" id="rtab-market"
+              data-tab="market" tabindex="-1">Market</button>
+          </div>
+        </div>
+        <div class="report-tab-panels">
+          <div class="report-tab-panel active" id="tab-panel-overview"
+            role="tabpanel" aria-labelledby="rtab-overview"></div>
+          <div class="report-tab-panel" id="tab-panel-themes"
+            role="tabpanel" aria-labelledby="rtab-themes"></div>
+          <div class="report-tab-panel" id="tab-panel-sentiment"
+            role="tabpanel" aria-labelledby="rtab-sentiment"></div>
+          <div class="report-tab-panel" id="tab-panel-voices"
+            role="tabpanel" aria-labelledby="rtab-voices"></div>
+          <div class="report-tab-panel" id="tab-panel-market"
+            role="tabpanel" aria-labelledby="rtab-market"></div>
+        </div>
+      </div>
+
     </section>
 
     <!-- ── Presentation agent section ────────────────────── -->
@@ -481,7 +518,7 @@ Example:
   </main>
 
   <footer class="footer">
-    <p>Customer Sentiment Analysis &mdash; Powered by Claude Haiku</p>
+    <p>&copy; 2025 Customer Sentiment Analysis</p>
   </footer>
 
   <script src="app.js"></script>

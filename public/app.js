@@ -134,6 +134,10 @@ function goToStep(step) {
 
   state.currentStep = step;
 
+  // Tagline: visible on landing/input pages, hidden on results
+  const tagline = $('header-tagline');
+  if (tagline) tagline.classList.toggle('hidden', step === 'report');
+
   if (step === 1) panels[1].classList.add('active');
   else if (step === 2) panels[2].classList.add('active');
   else if (step === 'loading') panels.loading.classList.add('active');
@@ -312,9 +316,10 @@ async function runAnalysis() {
     // Small delay so user sees the final loading step
     await sleep(600);
 
-    renderReport(json);
+    renderReportTabs(json);
     renderMetricCards(json);
-    showPresentationSection();
+    showActionBar();
+    showReportTabs();
     goToStep('report');
 
     // Update step indicator to show step 3 active
@@ -354,7 +359,6 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 $('new-analysis-btn').addEventListener('click', () => {
   goToStep(1);
-  $('report-content').innerHTML = '';
   // Reset radio buttons
   document.querySelectorAll('input[name="analysisType"]').forEach(r => r.checked = false);
   state.analysisType = null;
@@ -364,7 +368,11 @@ $('new-analysis-btn').addEventListener('click', () => {
   state.selectedFile = null;
   fileInput.value = '';
   updateDropZone(null);
-  // Hide presentation section and metrics
+  // Hide results UI
+  const actionBar = $('action-bar');
+  if (actionBar) actionBar.classList.add('hidden');
+  const tabsContainer = $('report-tabs-container');
+  if (tabsContainer) tabsContainer.classList.add('hidden');
   $('presentation-section').classList.add('hidden');
   const metricsRow = $('metrics-row');
   if (metricsRow) { metricsRow.classList.add('hidden'); metricsRow.innerHTML = ''; }
@@ -378,8 +386,12 @@ $('export-txt-btn').addEventListener('click', exportText);
 async function exportPDF() {
   if (!state.lastReport) return;
 
-  const el = $('report-content');
+  const el = $('report-tabs-container');
   const btn = $('export-pdf-btn');
+
+  // Temporarily show all tab panels so the PDF captures everything
+  const hiddenPanels = [...el.querySelectorAll('.report-tab-panel:not(.active)')];
+  hiddenPanels.forEach(p => p.classList.add('pdf-visible'));
   btn.textContent = 'Generating…';
   btn.disabled = true;
 
@@ -397,7 +409,8 @@ async function exportPDF() {
     // Fallback: print dialog
     window.print();
   } finally {
-    btn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/></svg> PDF`;
+    hiddenPanels.forEach(p => p.classList.remove('pdf-visible'));
+    btn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/></svg> Export PDF`;
     btn.disabled = false;
   }
 }
@@ -543,65 +556,7 @@ function hideError() {
 }
 $('close-error').addEventListener('click', hideError);
 
-// ─── Report renderer ──────────────────────────────────────────────
-
-function renderReport(report) {
-  const { analysisType, data, metadata } = report;
-  const container = $('report-content');
-  container.innerHTML = '';
-
-  const typeLabels = {
-    themes: 'Theme Extraction',
-    sentiment: 'Sentiment Analysis',
-    both: 'Full Analysis',
-  };
-
-  // Header
-  container.appendChild(el('div', { class: 'report-header' }, `
-    <div class="report-header-meta">
-      <span>Customer Sentiment Analysis Report</span>
-      <span>·</span>
-      <span class="report-type-badge">${typeLabels[analysisType]}</span>
-    </div>
-    <div class="report-title">Customer Feedback Analysis</div>
-    <div class="report-source">Source: ${esc(metadata.source)} &nbsp;·&nbsp; ${new Date(metadata.timestamp).toLocaleString()}</div>
-  `));
-
-  if (analysisType === 'both') {
-    renderBothReport(container, data);
-  } else if (analysisType === 'themes') {
-    renderThemesReport(container, data);
-  } else {
-    renderSentimentReport(container, data);
-  }
-
-  if (report.marketResearch?.themes?.length) {
-    renderMarketResearch(container, report.marketResearch);
-  }
-}
-
-function renderBothReport(container, data) {
-  // Executive summary
-  if (data.executiveSummary) {
-    container.appendChild(buildSection('Executive Summary', 'summary', iconSummary(), `
-      <p class="exec-summary">${esc(data.executiveSummary)}</p>
-    `));
-  }
-  // Themes section
-  if (data.themes) {
-    const themesData = {
-      summary: data.themes.summary,
-      themes: data.themes.list,
-      topFindings: data.themes.topFindings,
-      recommendations: data.themes.recommendations,
-    };
-    renderThemesReport(container, themesData);
-  }
-  // Sentiment section
-  if (data.sentiment) {
-    renderSentimentReport(container, data.sentiment);
-  }
-}
+// ─── Sub-renderers (used by tab renderers below) ──────────────────
 
 function renderThemesReport(container, data) {
   // Summary card
@@ -1455,4 +1410,324 @@ $('regenerate-pres-btn').addEventListener('click', () => {
   showPresPhase('input');
   $('pres-instructions').focus();
 });
+
+/* ═══════════════════════════════════════════════════════════════
+   Results page — tabbed layout
+   ═══════════════════════════════════════════════════════════════ */
+
+// ─── Show/hide action bar + tabs ──────────────────────────────────
+
+function showActionBar() {
+  const bar = $('action-bar');
+  if (bar) bar.classList.remove('hidden');
+}
+
+function showReportTabs() {
+  const container = $('report-tabs-container');
+  if (container) {
+    container.classList.remove('hidden');
+    switchReportTab('overview');
+  }
+}
+
+// ─── Action bar: Generate Presentation button ─────────────────────
+
+$('action-pres-btn').addEventListener('click', showPresentationSection);
+
+// ─── Tab switching ────────────────────────────────────────────────
+
+function switchReportTab(tabId) {
+  document.querySelectorAll('.report-tab').forEach(t => {
+    const active = t.dataset.tab === tabId;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', active ? 'true' : 'false');
+    t.setAttribute('tabindex', active ? '0' : '-1');
+  });
+  document.querySelectorAll('.report-tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === `tab-panel-${tabId}`);
+  });
+}
+
+function initReportTabs() {
+  document.querySelectorAll('.report-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchReportTab(tab.dataset.tab));
+    tab.addEventListener('keydown', e => {
+      const tabs = [...document.querySelectorAll('.report-tab')];
+      const idx  = tabs.indexOf(e.currentTarget);
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        tabs[(idx + 1) % tabs.length].focus();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        tabs[(idx - 1 + tabs.length) % tabs.length].focus();
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        switchReportTab(tab.dataset.tab);
+      }
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initReportTabs);
+
+// ─── Helpers ──────────────────────────────────────────────────────
+
+// Normalize topFindings to always be {text, severity} objects
+function normalizeFindings(findings) {
+  if (!findings?.length) return [];
+  return findings.map(f => typeof f === 'string' ? { text: f, severity: 'info' } : f);
+}
+
+// Build a labeled section within a tab panel
+function buildTabSection(title, content, rawNode = false) {
+  const section = document.createElement('div');
+  section.className = 'tab-section fade-up';
+
+  const label = document.createElement('div');
+  label.className = 'tab-section-label';
+  label.textContent = title;
+  section.appendChild(label);
+
+  const body = document.createElement('div');
+  body.className = 'tab-section-body';
+  if (rawNode && typeof content !== 'string') {
+    body.appendChild(content);
+  } else {
+    body.innerHTML = content;
+  }
+  section.appendChild(body);
+  return section;
+}
+
+function tabEmpty(msg, sub = '') {
+  return `<div class="tab-empty"><p>${esc(msg)}</p>${sub ? `<p class="tab-empty-sub">${esc(sub)}</p>` : ''}</div>`;
+}
+
+// ─── Main dispatcher ──────────────────────────────────────────────
+
+function renderReportTabs(report) {
+  const { analysisType, metadata } = report;
+  const typeLabels = { themes: 'Theme Extraction', sentiment: 'Sentiment Analysis', both: 'Full Analysis' };
+  const meta = $('report-tab-meta');
+  if (meta) {
+    meta.innerHTML = `
+      <span class="report-type-badge">${typeLabels[analysisType] || analysisType}</span>
+      <span class="report-meta-sep">·</span>
+      <span>${esc(metadata.source)}</span>
+      <span class="report-meta-sep">·</span>
+      <span>${new Date(metadata.timestamp).toLocaleString()}</span>`;
+  }
+  renderOverviewTab(report);
+  renderThemesTab(report);
+  renderSentimentTab(report);
+  renderVoicesTab(report);
+  renderMarketTab(report);
+}
+
+// ─── Tab: Overview ────────────────────────────────────────────────
+
+function renderOverviewTab(report) {
+  const { analysisType, data } = report;
+  const container = $('tab-panel-overview');
+  container.innerHTML = '';
+
+  // Executive summary — all analysis types
+  const summary = analysisType === 'both'
+    ? data.executiveSummary
+    : (data.executiveSummary || data.summary);
+  if (summary) {
+    container.appendChild(buildTabSection('Executive Summary',
+      `<p class="exec-summary">${esc(summary)}</p>`));
+  }
+
+  // Top findings — themes or both
+  const rawFindings = analysisType === 'both'
+    ? data.themes?.topFindings
+    : analysisType === 'themes' ? data.topFindings : null;
+  const findings = normalizeFindings(rawFindings);
+  if (findings.length) {
+    const html = findings.map(f => `
+      <div class="finding-card finding-${esc(f.severity || 'info')}">
+        <div class="finding-dot"></div>
+        <div class="finding-text">${esc(f.text)}</div>
+      </div>`).join('');
+    container.appendChild(buildTabSection('Top Findings', html));
+  }
+
+  // Recommendations — themes or both
+  const recs = analysisType === 'both'
+    ? data.themes?.recommendations
+    : analysisType === 'themes' ? data.recommendations : null;
+  if (recs?.length) {
+    const html = recs.map((r, i) => `
+      <div class="rec-row">
+        <div class="rec-badge">${i + 1}</div>
+        <div class="rec-text">${esc(r)}</div>
+      </div>`).join('');
+    container.appendChild(buildTabSection('Recommendations',
+      `<div class="rec-list">${html}</div>`));
+  }
+
+  if (!container.hasChildNodes()) {
+    container.innerHTML = tabEmpty('No overview data available for this analysis.');
+  }
+}
+
+// ─── Tab: Themes ──────────────────────────────────────────────────
+
+function renderThemesTab(report) {
+  const { analysisType, data } = report;
+  const container = $('tab-panel-themes');
+  container.innerHTML = '';
+
+  if (analysisType === 'sentiment') {
+    container.innerHTML = tabEmpty(
+      'Themes not included in this analysis.',
+      'Run a Full Analysis to see theme extraction alongside sentiment.');
+    return;
+  }
+
+  const themesData = analysisType === 'both'
+    ? { summary: data.themes?.summary, list: data.themes?.list || [] }
+    : { summary: data.summary, list: data.themes || data.list || [] };
+
+  if (themesData.summary) {
+    container.appendChild(buildTabSection('Themes Summary',
+      `<p class="exec-summary">${esc(themesData.summary)}</p>`));
+  }
+
+  if (themesData.list.length) {
+    const grid = document.createElement('div');
+    grid.className = 'themes-grid';
+    themesData.list.forEach(t => grid.appendChild(buildThemeCard(t)));
+    container.appendChild(buildTabSection('Key Themes', grid, true));
+  }
+}
+
+// ─── Tab: Sentiment ───────────────────────────────────────────────
+
+function renderSentimentTab(report) {
+  const { analysisType, data } = report;
+  const container = $('tab-panel-sentiment');
+  container.innerHTML = '';
+
+  if (analysisType === 'themes') {
+    container.innerHTML = tabEmpty(
+      'Sentiment not included in this analysis.',
+      'Run a Full Analysis to see sentiment alongside themes.');
+    return;
+  }
+
+  const sentData = analysisType === 'both' ? data.sentiment : data;
+
+  // Score + breakdown bars
+  container.appendChild(buildTabSection('Sentiment Review', buildSentimentOverviewHTML(sentData)));
+
+  // Drivers
+  if (sentData.drivers) {
+    const d = sentData.drivers;
+    container.appendChild(buildTabSection('Sentiment Drivers', `
+      <div class="drivers-grid">
+        <div class="driver-column">
+          <div class="driver-column-title" style="color:#059669">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+            Positive Drivers
+          </div>
+          ${(d.positive || []).map(drv => `<div class="driver-item driver-positive">${esc(drv)}</div>`).join('')}
+        </div>
+        <div class="driver-column">
+          <div class="driver-column-title" style="color:#dc2626">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+            Negative Drivers
+          </div>
+          ${(d.negative || []).map(drv => `<div class="driver-item driver-negative">${esc(drv)}</div>`).join('')}
+        </div>
+      </div>`));
+  }
+
+  // Emotional tone tags
+  if (sentData.emotionalTone) {
+    const tone = sentData.emotionalTone;
+    const tags = tone.tags?.length
+      ? tone.tags
+      : [tone.dominant, tone.secondary].filter(Boolean);
+    container.appendChild(buildTabSection('Emotional Tone', `
+      <div class="tone-tags">
+        ${tags.map(tag => `<span class="tone-tag">${esc(tag)}</span>`).join('')}
+      </div>
+      ${tone.insights?.length ? `<div class="tone-insights">
+        ${tone.insights.map(i => `<div class="tone-insight">💡 ${esc(i)}</div>`).join('')}
+      </div>` : ''}`));
+  }
+}
+
+// ─── Tab: Voices ──────────────────────────────────────────────────
+
+function renderVoicesTab(report) {
+  const { analysisType, data } = report;
+  const container = $('tab-panel-voices');
+  container.innerHTML = '';
+
+  let quotes = [];
+
+  if (analysisType === 'both' || analysisType === 'sentiment') {
+    const sentData = analysisType === 'both' ? data.sentiment : data;
+    const q = sentData?.notableQuotes || {};
+    quotes = [
+      ...(q.positive || []).map(text => ({ quote: text, sentiment: 'positive' })),
+      ...(q.negative || []).map(text => ({ quote: text, sentiment: 'negative' })),
+    ];
+  } else {
+    // themes only — collect example quotes from each theme
+    const list = data.themes || data.list || [];
+    list.forEach(t => {
+      (t.exampleQuotes || []).forEach(q => {
+        quotes.push({
+          quote: q,
+          sentiment: t.sentiment === 'positive' ? 'positive'
+            : t.sentiment === 'negative' ? 'negative' : 'neutral',
+        });
+      });
+    });
+    quotes = quotes.slice(0, 8);
+  }
+
+  if (!quotes.length) {
+    container.innerHTML = tabEmpty('No notable quotes were extracted from this analysis.');
+    return;
+  }
+
+  const html = quotes.map(q => {
+    const dotColor = q.sentiment === 'positive' ? '#22c55e'
+      : q.sentiment === 'negative' ? '#ef4444' : '#eab308';
+    return `
+      <div class="voice-quote-card">
+        <div class="voice-quote-mark" aria-hidden="true">"</div>
+        <p class="voice-quote-text">${esc(q.quote)}</p>
+        <div class="voice-quote-footer">
+          <span class="voice-quote-dot" style="background:${dotColor}"></span>
+          <span class="voice-quote-sentiment">${esc(q.sentiment)}</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.appendChild(buildTabSection('Notable Quotes',
+    `<div class="voice-quotes-grid">${html}</div>`));
+}
+
+// ─── Tab: Market ──────────────────────────────────────────────────
+
+function renderMarketTab(report) {
+  const container = $('tab-panel-market');
+  container.innerHTML = '';
+
+  if (!report.marketResearch?.themes?.length) {
+    container.innerHTML = tabEmpty(
+      'Market research was not included in this analysis.',
+      'Set the EXA_API_KEY environment variable and run a new analysis to see web research results here.');
+    return;
+  }
+
+  renderMarketResearch(container, report.marketResearch);
+}
 

@@ -76,6 +76,7 @@ function buildThemePrompt(feedback) {
 Return ONLY a valid JSON object — no markdown, no code blocks, no explanation. The JSON must strictly follow this schema:
 
 {
+  "executiveSummary": "2-3 sentence executive summary of the most important findings",
   "summary": "2-3 sentence executive summary of the main themes found in the feedback",
   "themes": [
     {
@@ -87,7 +88,11 @@ Return ONLY a valid JSON object — no markdown, no code blocks, no explanation.
       "exampleQuotes": ["verbatim or near-verbatim quote from the feedback", "another quote"]
     }
   ],
-  "topFindings": ["Most important finding 1", "Most important finding 2", "Most important finding 3"],
+  "topFindings": [
+    { "text": "Most important finding", "severity": "critical|moderate|info" },
+    { "text": "Second finding", "severity": "critical|moderate|info" },
+    { "text": "Third finding", "severity": "critical|moderate|info" }
+  ],
   "recommendations": ["Actionable recommendation 1", "Actionable recommendation 2", "Actionable recommendation 3"]
 }
 
@@ -108,6 +113,7 @@ function buildSentimentPrompt(feedback) {
 Return ONLY a valid JSON object — no markdown, no code blocks, no explanation. The JSON must strictly follow this schema:
 
 {
+  "executiveSummary": "2-3 sentence executive summary of the overall sentiment picture",
   "summary": "2-3 sentence executive summary of the overall sentiment picture",
   "overall": {
     "score": 7.2,
@@ -126,6 +132,7 @@ Return ONLY a valid JSON object — no markdown, no code blocks, no explanation.
   "emotionalTone": {
     "dominant": "Primary emotional tone (e.g. Frustrated, Satisfied, Excited, Disappointed)",
     "secondary": "Secondary emotional tone",
+    "tags": ["Emotion tag 1", "Emotion tag 2", "Emotion tag 3"],
     "insights": ["Emotional insight 1", "Emotional insight 2"]
   },
   "notableQuotes": {
@@ -163,7 +170,11 @@ Return ONLY a valid JSON object — no markdown, no code blocks, no explanation.
         "exampleQuotes": ["verbatim or near-verbatim quote", "another quote"]
       }
     ],
-    "topFindings": ["Finding 1", "Finding 2", "Finding 3"],
+    "topFindings": [
+      { "text": "Finding 1", "severity": "critical|moderate|info" },
+      { "text": "Finding 2", "severity": "critical|moderate|info" },
+      { "text": "Finding 3", "severity": "critical|moderate|info" }
+    ],
     "recommendations": ["Recommendation 1", "Recommendation 2", "Recommendation 3"]
   },
   "sentiment": {
@@ -185,6 +196,7 @@ Return ONLY a valid JSON object — no markdown, no code blocks, no explanation.
     "emotionalTone": {
       "dominant": "Primary emotional tone",
       "secondary": "Secondary emotional tone",
+      "tags": ["Emotion tag 1", "Emotion tag 2", "Emotion tag 3"],
       "insights": ["Insight 1", "Insight 2"]
     },
     "notableQuotes": {
