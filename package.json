@@ -9,11 +9,13 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.51.0",
+    "adm-zip": "^0.5.16",
     "cors": "^2.8.5",
     "csv-parse": "^5.5.6",
     "dotenv": "^16.4.5",
     "exa-js": "^2.8.0",
     "express": "^4.19.2",
+    "fast-xml-parser": "^5.5.7",
     "mammoth": "^1.7.2",
     "multer": "^1.4.5-lts.1",
     "pptxgenjs": "^4.0.1"

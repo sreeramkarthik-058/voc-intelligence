@@ -301,16 +301,123 @@ Example:
           </div>
           <div>
             <h3>Generate Executive Presentation</h3>
-            <p class="pres-section-desc">Describe your preferred style, colour theme, number of slides, and audience. Claude will structure the report into a polished deck.</p>
+            <p class="pres-section-desc">Configure your deck below. Claude will structure the analysis into a polished, downloadable .pptx.</p>
           </div>
         </div>
-        <textarea
-          id="pres-instructions"
-          class="pres-instructions-textarea"
-          rows="3"
-          aria-label="Presentation instructions"
-          placeholder="e.g. 6 slides, navy and gold colour scheme, minimal style for C-suite executives, focus on actionable next steps"
-        ></textarea>
+
+        <div class="pres-form">
+
+          <!-- Row 1: Slide count + Focus -->
+          <div class="pres-form-row">
+            <div class="pres-form-group">
+              <label class="pres-form-label" for="pres-slide-count">Number of slides</label>
+              <select id="pres-slide-count" class="pres-form-select" aria-label="Number of slides">
+                <option value="4">4 slides</option>
+                <option value="6" selected>6 slides</option>
+                <option value="8">8 slides</option>
+                <option value="10">10 slides</option>
+                <option value="12">12 slides</option>
+              </select>
+            </div>
+            <div class="pres-form-group">
+              <label class="pres-form-label" for="pres-focus">Presentation focus</label>
+              <select id="pres-focus" class="pres-form-select" aria-label="Presentation focus">
+                <option value="Executive summary">Executive summary</option>
+                <option value="Detailed analysis">Detailed analysis</option>
+                <option value="Problem &amp; action plan">Problem &amp; action plan</option>
+                <option value="custom">Custom…</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Custom focus text (hidden unless "Custom" selected) -->
+          <div class="pres-form-group" id="pres-custom-focus-wrap" style="display:none">
+            <label class="pres-form-label" for="pres-custom-focus">Describe your focus</label>
+            <input type="text" id="pres-custom-focus" class="pres-form-input"
+              placeholder="e.g. Mobile team deep-dive, focus on crash rate trends"
+              aria-label="Custom presentation focus" />
+          </div>
+
+          <!-- Theme picker -->
+          <div class="pres-form-group">
+            <span class="pres-form-label" id="pres-theme-label">Theme</span>
+            <div class="pres-theme-picker" role="radiogroup" aria-labelledby="pres-theme-label">
+
+              <label class="pres-theme-option">
+                <input type="radio" name="presTheme" value="dark" checked aria-label="Futuristic Dark" />
+                <div class="pres-theme-card">
+                  <div class="pres-theme-swatch" style="background:#0A0A1A">
+                    <div class="pres-swatch-accent" style="background:#6366F1"></div>
+                    <div class="pres-swatch-accent" style="background:#06B6D4"></div>
+                  </div>
+                  <div class="pres-theme-name">Futuristic Dark</div>
+                </div>
+              </label>
+
+              <label class="pres-theme-option">
+                <input type="radio" name="presTheme" value="light" aria-label="Futuristic Light" />
+                <div class="pres-theme-card">
+                  <div class="pres-theme-swatch" style="background:#F8FAFC">
+                    <div class="pres-swatch-accent" style="background:#6366F1"></div>
+                    <div class="pres-swatch-accent" style="background:#0EA5E9"></div>
+                  </div>
+                  <div class="pres-theme-name">Futuristic Light</div>
+                </div>
+              </label>
+
+              <label class="pres-theme-option">
+                <input type="radio" name="presTheme" value="template" aria-label="Upload Template" />
+                <div class="pres-theme-card">
+                  <div class="pres-theme-swatch pres-theme-swatch--upload">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                    </svg>
+                  </div>
+                  <div class="pres-theme-name">Upload Template</div>
+                </div>
+              </label>
+
+            </div>
+          </div>
+
+          <!-- Template upload zone (shown only when "Upload Template" selected) -->
+          <div id="pres-template-zone" class="hidden">
+            <div class="pres-template-dropzone" id="pres-template-dropzone"
+              role="button" tabindex="0" aria-label="Upload .pptx template">
+              <input type="file" id="pres-template-input" accept=".pptx" aria-label="Choose .pptx template" hidden />
+              <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <path d="M28 8H12a4 4 0 00-4 4v24a4 4 0 004 4h24a4 4 0 004-4V20L28 8z"/>
+                <path d="M28 8v12h12M24 26v-8M20 22l4-4 4 4"/>
+              </svg>
+              <p class="pres-template-hint">Click or drag a <strong>.pptx</strong> template here</p>
+            </div>
+            <!-- Extracted theme preview -->
+            <div id="pres-template-preview" class="hidden pres-template-preview">
+              <div class="pres-template-file">
+                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
+                <span id="pres-template-filename">template.pptx</span>
+                <button class="icon-btn" id="pres-template-remove" type="button" aria-label="Remove template">
+                  <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+              </div>
+              <div class="pres-template-swatches" id="pres-template-swatches" aria-label="Extracted theme colors"></div>
+            </div>
+          </div>
+
+          <!-- Additional instructions -->
+          <div class="pres-form-group">
+            <label class="pres-form-label" for="pres-instructions">Additional instructions <span class="pres-optional">(optional)</span></label>
+            <textarea
+              id="pres-instructions"
+              class="pres-instructions-textarea"
+              rows="2"
+              aria-label="Additional presentation instructions"
+              placeholder="e.g. Keep tone formal, highlight the top 3 pain points, include competitor context"
+            ></textarea>
+          </div>
+
+        </div><!-- /.pres-form -->
+
         <div class="pres-input-footer">
           <button class="btn btn-primary" id="generate-pres-btn" type="button" aria-label="Generate presentation">
             <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd"/></svg>

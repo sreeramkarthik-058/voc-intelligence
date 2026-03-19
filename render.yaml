@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: voc-intelligence
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ANTHROPIC_API_KEY
+        sync: false        # Set this in the Render dashboard — never committed
+      - key: EXA_API_KEY
+        sync: false        # Set this in the Render dashboard — never committed

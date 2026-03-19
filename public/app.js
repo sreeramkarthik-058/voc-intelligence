@@ -935,6 +935,7 @@ const presState = {
   theme: {},
   currentSlide: 0,
   pptxBase64: null,
+  customTheme: null,   // set when user uploads a .pptx template
 };
 
 // ─── Show presentation section after report renders ───────────────
@@ -943,9 +944,10 @@ const presState = {
 function showPresentationSection() {
   const section = $('presentation-section');
   section.classList.remove('hidden');
-  // Reset to input phase
   showPresPhase('input');
   $('pres-instructions').value = '';
+  presState.customTheme = null;
+  resetTemplateUpload();
   section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -955,19 +957,161 @@ function showPresPhase(phase) {
   $('pres-viewer-phase').classList.toggle('hidden', phase !== 'viewer');
 }
 
+// ─── Theme picker + template upload ──────────────────────────────
+
+document.querySelectorAll('input[name="presTheme"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const zone = $('pres-template-zone');
+    if (zone) zone.classList.toggle('hidden', radio.value !== 'template');
+    if (radio.value !== 'template') {
+      presState.customTheme = null;
+      resetTemplateUpload();
+    }
+  });
+});
+
+// Focus dropdown — show custom text field when "Custom" selected
+const focusSel = $('pres-focus');
+if (focusSel) {
+  focusSel.addEventListener('change', () => {
+    const wrap = $('pres-custom-focus-wrap');
+    if (wrap) wrap.style.display = focusSel.value === 'custom' ? '' : 'none';
+  });
+}
+
+// Template dropzone
+const templateDropzone = $('pres-template-dropzone');
+const templateInput    = $('pres-template-input');
+
+if (templateDropzone && templateInput) {
+  templateDropzone.addEventListener('click', e => {
+    if (e.target.tagName !== 'BUTTON') templateInput.click();
+  });
+  templateDropzone.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); templateInput.click(); }
+  });
+  templateDropzone.addEventListener('dragover', e => {
+    e.preventDefault();
+    templateDropzone.classList.add('drag-over');
+  });
+  templateDropzone.addEventListener('dragleave', () => templateDropzone.classList.remove('drag-over'));
+  templateDropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    templateDropzone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleTemplateFile(file);
+  });
+  templateInput.addEventListener('change', e => {
+    if (e.target.files[0]) handleTemplateFile(e.target.files[0]);
+  });
+}
+
+const removeTemplateBtn = $('pres-template-remove');
+if (removeTemplateBtn) {
+  removeTemplateBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    presState.customTheme = null;
+    resetTemplateUpload();
+  });
+}
+
+async function handleTemplateFile(file) {
+  if (!file.name.toLowerCase().endsWith('.pptx')) {
+    showError('Template must be a .pptx file.');
+    return;
+  }
+  // Show filename immediately
+  const filename = $('pres-template-filename');
+  if (filename) filename.textContent = file.name;
+  const preview = $('pres-template-preview');
+  if (preview) preview.classList.remove('hidden');
+  templateDropzone.style.opacity = '0.5';
+  templateDropzone.style.pointerEvents = 'none';
+
+  try {
+    const formData = new FormData();
+    formData.append('template', file);
+    const res  = await fetch('/api/template/extract', { method: 'POST', body: formData });
+    const json = await res.json();
+    if (!res.ok || !json.success) throw new Error(json.error || 'Failed to read template.');
+    presState.customTheme = json.theme;
+    renderTemplateSwatches(json.theme);
+  } catch (err) {
+    presState.customTheme = null;
+    showError(err.message || 'Could not extract theme from template.');
+    resetTemplateUpload();
+  } finally {
+    templateDropzone.style.opacity = '';
+    templateDropzone.style.pointerEvents = '';
+  }
+}
+
+function renderTemplateSwatches(theme) {
+  const container = $('pres-template-swatches');
+  if (!container) return;
+  const colors = [
+    { key: 'bgColor',     label: 'Background' },
+    { key: 'accentColor', label: 'Accent' },
+    { key: 'secondaryAccent', label: 'Secondary' },
+    { key: 'textColor',   label: 'Text' },
+  ];
+  container.innerHTML = colors.map(({ key, label }) =>
+    `<div class="pres-template-swatch" style="background:#${theme[key]||'ccc'}" title="${label}: #${theme[key]||'?'}"></div>`
+  ).join('');
+}
+
+function resetTemplateUpload() {
+  const preview = $('pres-template-preview');
+  if (preview) preview.classList.add('hidden');
+  if (templateInput) templateInput.value = '';
+  const swatches = $('pres-template-swatches');
+  if (swatches) swatches.innerHTML = '';
+  if (templateDropzone) {
+    templateDropzone.style.opacity = '';
+    templateDropzone.style.pointerEvents = '';
+  }
+}
+
+// ─── Build instructions string from form ─────────────────────────
+
+function buildInstructionsFromForm() {
+  const slideCount = ($('pres-slide-count')?.value || '6');
+  const focusVal   = $('pres-focus')?.value || 'Executive summary';
+  const focus      = focusVal === 'custom'
+    ? ($('pres-custom-focus')?.value.trim() || 'Executive summary')
+    : focusVal;
+
+  const themeVal   = document.querySelector('input[name="presTheme"]:checked')?.value || 'dark';
+  const themeLabel = themeVal === 'template' && presState.customTheme
+    ? 'custom uploaded template style'
+    : themeVal === 'light' ? 'futuristic light theme (bright background, dark text, indigo accent)'
+    : 'futuristic dark theme (near-black background, indigo and cyan accents)';
+
+  const extra = $('pres-instructions')?.value.trim();
+
+  let parts = [
+    `${slideCount} slides`,
+    `Focus: ${focus}`,
+    `Theme: ${themeLabel}`,
+  ];
+  if (extra) parts.push(extra);
+  return parts.join('. ');
+}
+
 // ─── Generate presentation (fires only on button click) ───────────
 
 $('generate-pres-btn').addEventListener('click', generatePresentation);
 
 async function generatePresentation() {
-  const instructions = $('pres-instructions').value.trim();
-  if (!instructions) {
-    $('pres-instructions').focus();
-    $('pres-instructions').classList.add('pres-input-error');
-    setTimeout(() => $('pres-instructions').classList.remove('pres-input-error'), 1800);
+  const instructions = buildInstructionsFromForm();
+  if (!state.lastReport) return;
+
+  // Validate template selection
+  const themeVal = document.querySelector('input[name="presTheme"]:checked')?.value || 'dark';
+  if (themeVal === 'template' && !presState.customTheme) {
+    showError('Please upload a .pptx template file first, or choose a different theme.');
     return;
   }
-  if (!state.lastReport) return;
 
   showPresPhase('loading');
 
@@ -978,15 +1122,16 @@ async function generatePresentation() {
       body: JSON.stringify({
         report: state.lastReport,
         instructions,
+        customTheme: presState.customTheme || null,
       }),
     });
 
     const json = await res.json();
     if (!res.ok || !json.success) throw new Error(json.error || 'Presentation generation failed.');
 
-    presState.slides     = json.slides;
-    presState.theme      = json.theme || {};
-    presState.pptxBase64 = json.pptxBase64;
+    presState.slides       = json.slides;
+    presState.theme        = json.theme || {};
+    presState.pptxBase64   = json.pptxBase64;
     presState.currentSlide = 0;
 
     renderSlideViewer();
@@ -1007,39 +1152,209 @@ function renderSlideViewer() {
   updateNavButtons();
 }
 
-function renderSlide(index) {
-  const slide = presState.slides[index];
-  const theme = presState.theme;
-  const total = presState.slides.length;
-  const viewport = $('slide-viewport');
+// ─── Theme color resolver (adds # prefix for CSS) ─────────────────
 
-  if (slide.type === 'title') {
-    viewport.innerHTML = `
-      <div class="pres-slide pres-slide-title" style="background:${esc(theme.primary || '#2563eb')}">
-        <div class="pres-accent-stripe-left" style="background:${esc(theme.accent || '#f59e0b')}"></div>
-        <div class="pres-title-content">
-          <div class="pres-label">Voice of Customer Analysis</div>
-          <h1 class="pres-main-title">${esc(slide.title || '')}</h1>
-          ${slide.subtitle ? `<p class="pres-main-subtitle">${esc(slide.subtitle)}</p>` : ''}
-        </div>
-        <div class="pres-accent-bar-bottom" style="background:${esc(theme.accent || '#f59e0b')}"></div>
-      </div>`;
-  } else {
-    const bullets = (slide.body || []).filter(Boolean);
-    viewport.innerHTML = `
-      <div class="pres-slide pres-slide-content" style="background:${esc(theme.slideBackground || '#f8fafc')}">
-        <div class="pres-content-header" style="background:${esc(theme.primary || '#2563eb')}">
-          <div class="pres-accent-stripe-left" style="background:${esc(theme.accent || '#f59e0b')}"></div>
-          <h2 class="pres-content-title">${esc(slide.title || '')}</h2>
-          <span class="pres-slide-num">${index + 1} / ${total}</span>
-        </div>
-        ${slide.subtitle ? `<p class="pres-content-subtitle" style="color:${esc(theme.subtext || '#64748b')}">${esc(slide.subtitle)}</p>` : ''}
-        <ul class="pres-bullets" style="color:${esc(theme.text || '#1e293b')}">
-          ${bullets.map(b => `<li>${esc(b)}</li>`).join('')}
-        </ul>
-        <div class="pres-content-footer" style="border-color:${esc(theme.accent || '#f59e0b')}"></div>
-      </div>`;
+function tc(name, theme) {
+  // Resolve semantic names or raw hex
+  const map = {
+    positive:  theme.positiveColor  || '22C55E',
+    negative:  theme.negativeColor  || 'EF4444',
+    neutral:   theme.neutralColor   || 'EAB308',
+    accent:    theme.accentColor    || '6366F1',
+    secondary: theme.secondaryAccent|| '06B6D4',
+    red_dot:   theme.negativeColor  || 'EF4444',
+    yellow_dot:theme.neutralColor   || 'EAB308',
+    purple_dot:theme.accentColor    || '6366F1',
+    green_dot: theme.positiveColor  || '22C55E',
+    blue_dot:  theme.secondaryAccent|| '06B6D4',
+  };
+  const hex = map[name] || name || theme.accentColor || '6366F1';
+  return '#' + hex.replace(/^#/, '');
+}
+
+function renderSlide(index) {
+  const slide    = presState.slides[index];
+  const t        = presState.theme;
+  const total    = presState.slides.length;
+  const viewport = $('slide-viewport');
+  const isDark   = isThemeDark(t);
+
+  const bg      = '#' + (t.bgColor         || (isDark ? '0A0A1A' : 'F8FAFC'));
+  const text    = '#' + (t.textColor        || (isDark ? 'FFFFFF' : '0F172A'));
+  const muted   = '#' + (t.mutedText        || (isDark ? '9CA3AF' : '64748B'));
+  const accent  = '#' + (t.accentColor      || '6366F1');
+  const sec     = '#' + (t.secondaryAccent  || (isDark ? '06B6D4' : '0EA5E9'));
+  const cardBg  = '#' + (t.cardBg           || (isDark ? '1A1A2E' : 'FFFFFF'));
+  const numLbl  = index > 0 ? `<span style="position:absolute;bottom:6px;right:10px;font-size:9px;color:${muted};opacity:0.7">${index + 1} / ${total}</span>` : '';
+
+  let html = '';
+
+  switch (slide.type) {
+
+    case 'title': {
+      html = `
+        <div class="pres-slide" style="background:${bg};color:${text};flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:24px">
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:${muted}">Voice of Customer Analysis</div>
+          <h1 style="font-size:1.35rem;font-weight:800;line-height:1.2;max-width:90%;margin:0">${esc(slide.title || '')}</h1>
+          ${slide.subtitle ? `<p style="font-size:0.82rem;color:${muted};margin:0;max-width:85%">${esc(slide.subtitle)}</p>` : ''}
+          ${slide.accent ? `<div style="margin-top:4px;font-size:0.9rem;font-weight:700;color:${accent}">${esc(slide.accent)}</div>` : ''}
+          <div style="width:60%;height:2px;background:${accent};border-radius:2px;margin-top:6px"></div>
+        </div>`;
+      break;
+    }
+
+    case 'stats': {
+      const stats = (slide.stats || []).slice(0, 4);
+      const cards = stats.map(s => {
+        const color = tc(s.color, t);
+        return `
+          <div class="pres-stat-card" style="background:${cardBg};color:${text};border:1px solid #${t.cardBorder||'2D2D4E'}">
+            <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${color};border-radius:4px 0 0 4px"></div>
+            <div class="pres-stat-value" style="color:${color}">${esc(String(s.value||''))}</div>
+            <div class="pres-stat-label" style="color:${muted}">${esc(s.label||'')}</div>
+          </div>`;
+      }).join('');
+      html = `
+        <div class="pres-slide pres-slide-stats" style="background:${bg};color:${text};flex-direction:column;padding:12px 10px 8px;position:relative">
+          <div style="font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:${muted};padding:0 6px 8px">${esc(slide.title||'')}</div>
+          <div class="pres-stats-grid">${cards}</div>
+          ${slide.insight ? `<div class="pres-stat-insight" style="color:${muted}">${esc(slide.insight)}</div>` : ''}
+          ${numLbl}
+        </div>`;
+      break;
+    }
+
+    case 'bullets': {
+      const points = (slide.points || []).slice(0, 4);
+      const rows = points.map(p => {
+        const dot = typeof p === 'string' ? accent : tc((p.icon||'accent'), t);
+        const txt = typeof p === 'string' ? p : (p.text || '');
+        return `<li><span class="pres-dot" style="background:${dot}"></span><span>${esc(txt)}</span></li>`;
+      }).join('');
+      html = `
+        <div class="pres-slide pres-slide-bullets" style="background:${bg};color:${text};flex-direction:column;padding:12px 10px 8px;position:relative">
+          <div style="font-size:0.88rem;font-weight:700;padding:0 6px 6px;border-bottom:1px solid #${t.cardBorder||'2D2D4E'}">${esc(slide.title||'')}</div>
+          <ul class="pres-bullets-list" style="color:${text}">${rows}</ul>
+          ${slide.note ? `<div style="font-size:0.68rem;color:${muted};padding:4px 6px 2px;border-top:1px solid #${t.cardBorder||'2D2D4E'}">${esc(slide.note)}</div>` : ''}
+          ${numLbl}
+        </div>`;
+      break;
+    }
+
+    case 'comparison': {
+      const leftItems  = (slide.left?.items  || []).slice(0, 5);
+      const rightItems = (slide.right?.items || []).slice(0, 5);
+      const mkItems = items => items.map(item =>
+        `<div class="pres-compare-item" style="color:${text}"><span class="pres-dot" style="background:${muted}"></span>${esc(item)}</div>`
+      ).join('');
+      html = `
+        <div class="pres-slide" style="background:${bg};color:${text};flex-direction:column;padding:12px 10px 8px;position:relative">
+          <div style="font-size:0.88rem;font-weight:700;padding:0 6px 8px">${esc(slide.title||'')}</div>
+          <div class="pres-compare-grid" style="flex:1">
+            <div class="pres-compare-col" style="background:${cardBg};border:1px solid #${t.cardBorder||'2D2D4E'}">
+              <div class="pres-compare-header" style="background:${accent};color:#fff">${esc(slide.left?.label||'Strengths')}</div>
+              <div class="pres-compare-items">${mkItems(leftItems)}</div>
+            </div>
+            <div class="pres-compare-col" style="background:${cardBg};border:1px solid #${t.cardBorder||'2D2D4E'}">
+              <div class="pres-compare-header" style="background:${sec};color:#fff">${esc(slide.right?.label||'Weaknesses')}</div>
+              <div class="pres-compare-items">${mkItems(rightItems)}</div>
+            </div>
+          </div>
+          ${numLbl}
+        </div>`;
+      break;
+    }
+
+    case 'bar_chart': {
+      const bars   = (slide.bars || []).slice(0, 6);
+      const maxVal = Math.max(...bars.map(b => Number(b.value)||0), 1);
+      const rows   = bars.map(b => {
+        const pct   = Math.round((Number(b.value)||0) / maxVal * 100);
+        const color = tc(b.color, t);
+        return `
+          <div class="pres-bar-row">
+            <div class="pres-bar-label" style="color:${muted}">${esc(b.label||'')}</div>
+            <div class="pres-bar-track" style="background:${cardBg}">
+              <div class="pres-bar-fill" style="width:${pct}%;background:${color}"></div>
+            </div>
+            <div class="pres-bar-value" style="color:${text}">${esc(String(b.value||''))}</div>
+          </div>`;
+      }).join('');
+      html = `
+        <div class="pres-slide pres-slide-bar" style="background:${bg};color:${text};flex-direction:column;padding:12px 10px 8px;position:relative">
+          <div style="font-size:0.88rem;font-weight:700;padding:0 6px 8px">${esc(slide.title||'')}</div>
+          <div class="pres-bar-rows">${rows}</div>
+          ${numLbl}
+        </div>`;
+      break;
+    }
+
+    case 'timeline': {
+      const steps = (slide.steps || []).slice(0, 5);
+      const nodes = steps.map((s, i) => `
+        <div class="pres-timeline-step">
+          <div class="pres-timeline-node" style="background:${i % 2 === 0 ? accent : sec}">${i + 1}</div>
+          <div class="pres-timeline-text">
+            <div class="pres-timeline-phase" style="color:${accent}">${esc(s.phase||'')}</div>
+            <div class="pres-timeline-action" style="color:${text}">${esc(s.action||'')}</div>
+            ${s.owner ? `<div class="pres-timeline-owner" style="color:${muted}">${esc(s.owner)}</div>` : ''}
+          </div>
+        </div>`).join('');
+      html = `
+        <div class="pres-slide pres-slide-timeline" style="background:${bg};color:${text};flex-direction:column;padding:12px 10px 8px;position:relative">
+          <div style="font-size:0.88rem;font-weight:700;padding:0 6px 8px;border-bottom:1px solid #${t.cardBorder||'2D2D4E'}">${esc(slide.title||'Next Steps')}</div>
+          <div class="pres-timeline-steps">${nodes}</div>
+          ${numLbl}
+        </div>`;
+      break;
+    }
+
+    case 'quote': {
+      const sentColor = slide.sentiment === 'positive' ? tc('positive', t)
+        : slide.sentiment === 'negative' ? tc('negative', t) : tc('neutral', t);
+      html = `
+        <div class="pres-slide pres-slide-quote" style="background:${bg};color:${text};flex-direction:column;padding:0;position:relative">
+          <div class="pres-quote-mark" style="color:${accent}">"</div>
+          <div class="pres-quote-text" style="color:${text}">${esc(slide.quote||'')}</div>
+          <div style="width:40%;height:1px;background:#${t.cardBorder||'2D2D4E'};margin:0 auto 0"></div>
+          <div class="pres-quote-attribution" style="color:${muted};justify-content:center">
+            <span class="pres-dot" style="background:${sentColor}"></span>
+            ${esc(slide.attribution||'')}
+          </div>
+          ${numLbl}
+        </div>`;
+      break;
+    }
+
+    case 'section_divider': {
+      html = `
+        <div class="pres-slide pres-slide-divider" style="background:${bg};color:${text};position:relative">
+          <div class="pres-divider-accent" style="background:${accent}"></div>
+          <div class="pres-divider-title" style="color:${text}">${esc(slide.title||'')}</div>
+          ${slide.subtitle ? `<div class="pres-divider-subtitle" style="color:${muted}">${esc(slide.subtitle)}</div>` : ''}
+          <div class="pres-divider-accent" style="background:${sec}"></div>
+          ${numLbl}
+        </div>`;
+      break;
+    }
+
+    default: {
+      // Fallback: render as bullets
+      const points = (slide.body || slide.points || []).slice(0, 4);
+      const rows = points.map(p => {
+        const txt = typeof p === 'string' ? p : (p.text || '');
+        return `<li><span class="pres-dot" style="background:${accent}"></span><span>${esc(txt)}</span></li>`;
+      }).join('');
+      html = `
+        <div class="pres-slide" style="background:${bg};color:${text};flex-direction:column;padding:12px 10px 8px;position:relative">
+          <div style="font-size:0.88rem;font-weight:700;padding:0 6px 8px">${esc(slide.title||'')}</div>
+          <ul class="pres-bullets-list" style="color:${text}">${rows}</ul>
+          ${numLbl}
+        </div>`;
+    }
   }
+
+  viewport.innerHTML = html;
 
   // Sync thumbnail highlight
   document.querySelectorAll('.slide-thumb').forEach((t, i) => {
@@ -1047,16 +1362,34 @@ function renderSlide(index) {
   });
 }
 
+function isThemeDark(theme) {
+  const hex = theme.bgColor || '0A0A1A';
+  const r = parseInt(hex.slice(0, 2), 16) / 255;
+  const g = parseInt(hex.slice(2, 4), 16) / 255;
+  const b = parseInt(hex.slice(4, 6), 16) / 255;
+  const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  return lum < 0.4;
+}
+
 function buildThumbnails() {
-  const strip = $('slide-thumbnails');
+  const strip  = $('slide-thumbnails');
+  const theme  = presState.theme;
+  const bgHex  = '#' + (theme.bgColor    || '0A0A1A');
+  const txtHex = '#' + (theme.textColor  || 'FFFFFF');
+  const accHex = '#' + (theme.accentColor|| '6366F1');
+
   strip.innerHTML = '';
   presState.slides.forEach((slide, i) => {
+    const isTitle  = slide.type === 'title';
+    const thumbBg  = isTitle ? accHex : bgHex;
+    const thumbTxt = '#' + (theme.textColor || 'FFFFFF');
+
     const thumb = document.createElement('button');
     thumb.className = 'slide-thumb' + (i === 0 ? ' active' : '');
-    thumb.setAttribute('aria-label', `Slide ${i + 1}: ${slide.title}`);
+    thumb.setAttribute('aria-label', `Slide ${i + 1}: ${slide.title || slide.type}`);
     thumb.innerHTML = `
-      <div class="thumb-inner" style="background:${esc(i === 0 || slide.type === 'title' ? (presState.theme.primary || '#2563eb') : (presState.theme.slideBackground || '#f8fafc'))}">
-        <div class="thumb-title" style="color:${esc(slide.type === 'title' ? '#fff' : (presState.theme.text || '#1e293b'))}">${esc(slide.title || '')}</div>
+      <div class="thumb-inner" style="background:${esc(thumbBg)}">
+        <div class="thumb-title" style="color:${esc(thumbTxt)}">${esc(slide.title || slide.type || '')}</div>
         <div class="thumb-num">${i + 1}</div>
       </div>`;
     thumb.addEventListener('click', () => {
