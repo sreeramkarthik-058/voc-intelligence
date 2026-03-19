@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   VoC Intelligence Tool — Frontend Logic
+   Customer Sentiment Analysis — Frontend Logic
    ═══════════════════════════════════════════════════════════════ */
 
 // ─── Dark mode ────────────────────────────────────────────────────
@@ -421,7 +421,7 @@ function buildPlainText(report) {
   const sep = '─'.repeat(60);
 
   lines.push(hr);
-  lines.push('VoC INTELLIGENCE REPORT');
+  lines.push('CUSTOMER SENTIMENT ANALYSIS REPORT');
   lines.push(`Analysis Type: ${analysisType.toUpperCase()}`);
   lines.push(`Source: ${metadata.source}`);
   lines.push(`Generated: ${new Date(metadata.timestamp).toLocaleString()}`);
@@ -559,7 +559,7 @@ function renderReport(report) {
   // Header
   container.appendChild(el('div', { class: 'report-header' }, `
     <div class="report-header-meta">
-      <span>VoC Intelligence Report</span>
+      <span>Customer Sentiment Analysis Report</span>
       <span>·</span>
       <span class="report-type-badge">${typeLabels[analysisType]}</span>
     </div>
@@ -1194,7 +1194,7 @@ function renderSlide(index) {
     case 'title': {
       html = `
         <div class="pres-slide" style="background:${bg};color:${text};flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:24px">
-          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:${muted}">Voice of Customer Analysis</div>
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:${muted}">Customer Sentiment Analysis</div>
           <h1 style="font-size:1.35rem;font-weight:800;line-height:1.2;max-width:90%;margin:0">${esc(slide.title || '')}</h1>
           ${slide.subtitle ? `<p style="font-size:0.82rem;color:${muted};margin:0;max-width:85%">${esc(slide.subtitle)}</p>` : ''}
           ${slide.accent ? `<div style="margin-top:4px;font-size:0.9rem;font-weight:700;color:${accent}">${esc(slide.accent)}</div>` : ''}

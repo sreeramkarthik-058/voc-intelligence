@@ -1,7 +1,7 @@
-# VoC Intelligence Tool
+# Customer Sentiment Analysis
 
 ## What this app does
-AI-powered Voice of Customer analysis tool for Product Managers.
+AI-powered customer sentiment and feedback analysis tool for Product Managers.
 Takes customer feedback (pasted text or uploaded CSV/Word doc),
 analyses themes and sentiment using Claude Haiku, searches the
 web using Exa MCP for market research, and generates downloadable

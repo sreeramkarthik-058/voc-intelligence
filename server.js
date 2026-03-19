@@ -13,6 +13,6 @@ app.use('/api', analyzeRoute);
 app.use('/api', presentationRoute);
 
 app.listen(PORT, () => {
-  console.log(`\n🧠 VoC Intelligence Tool`);
+  console.log(`\n🧠 Customer Sentiment Analysis`);
   console.log(`   Running at: http://localhost:${PORT}\n`);
 });

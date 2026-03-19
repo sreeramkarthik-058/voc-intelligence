@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: voc-intelligence
+    name: customer-sentiment-analysis
     runtime: node
     plan: free
     buildCommand: npm install

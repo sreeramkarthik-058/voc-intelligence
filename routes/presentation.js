@@ -323,8 +323,8 @@ function renderTitleSlide(pptx, s, slide, c) {
     rectRadius: 0.1,
   });
 
-  // VoC label (small caps above title)
-  s.addText('VOICE OF CUSTOMER ANALYSIS', {
+  // Label (small caps above title)
+  s.addText('CUSTOMER SENTIMENT ANALYSIS', {
     x: 0.75, y: 1.4, w: 9.5, h: 0.35,
     fontSize: 9, color: c.muted,
     fontFace: c.font, align: 'left',
@@ -815,8 +815,8 @@ function renderSectionDividerSlide(pptx, s, slide, c, slideNum, total) {
 async function buildPptx(slides, theme) {
   const pptx = new PptxGenJS();
   pptx.layout  = 'LAYOUT_WIDE'; // 13.33" × 7.5"
-  pptx.title   = 'VoC Intelligence Report';
-  pptx.author  = 'VoC Intelligence Tool';
+  pptx.title   = 'Customer Sentiment Analysis Report';
+  pptx.author  = 'Customer Sentiment Analysis';
 
   const c     = buildColors(theme || {});
   const total = slides.length;

@@ -1,7 +1,7 @@
 {
-  "name": "voc-intelligence",
+  "name": "customer-sentiment-analysis",
   "version": "1.0.0",
-  "description": "Voice of Customer Intelligence Tool — AI-powered feedback analysis",
+  "description": "Customer Sentiment Analysis — AI-powered feedback analysis for Product Managers",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
