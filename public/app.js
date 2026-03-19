@@ -2,6 +2,103 @@
    VoC Intelligence Tool — Frontend Logic
    ═══════════════════════════════════════════════════════════════ */
 
+// ─── Dark mode ────────────────────────────────────────────────────
+
+function initDarkMode() {
+  const saved = localStorage.getItem('voc-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = saved === 'dark' || (!saved && prefersDark);
+  if (isDark) applyDarkMode(true, false);
+}
+
+function applyDarkMode(dark, save = true) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  const btn = document.getElementById('dark-toggle');
+  if (btn) btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  if (save) localStorage.setItem('voc-theme', dark ? 'dark' : 'light');
+}
+
+initDarkMode();
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('dark-toggle');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      applyDarkMode(!isDark);
+    });
+  }
+});
+
+// ─── Count-up animation ───────────────────────────────────────────
+
+function countUp(el, target, duration = 900) {
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reducedMotion) {
+    el.textContent = Number.isInteger(target) ? target : target.toFixed(1);
+    return;
+  }
+  const start = performance.now();
+  const isDecimal = !Number.isInteger(target);
+  function tick(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = target * eased;
+    el.textContent = isDecimal ? current.toFixed(1) : Math.round(current);
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ─── Metric cards row ─────────────────────────────────────────────
+
+function renderMetricCards(report) {
+  const row = document.getElementById('metrics-row');
+  if (!row) return;
+
+  const { analysisType, data } = report;
+
+  // Extract values
+  let score = null, negPct = null, themesCount = null;
+
+  if (analysisType === 'both') {
+    score       = data.sentiment?.overall?.score ?? null;
+    negPct      = data.sentiment?.breakdown?.negative ?? null;
+    themesCount = (data.themes?.list || []).length || null;
+  } else if (analysisType === 'sentiment') {
+    score  = data.overall?.score ?? null;
+    negPct = data.breakdown?.negative ?? null;
+  } else if (analysisType === 'themes') {
+    themesCount = (data.list || data.themes || []).length || null;
+  }
+
+  const scoreVal  = score    != null ? parseFloat(score) : null;
+  const negVal    = negPct   != null ? parseInt(negPct, 10) : null;
+  const themesVal = themesCount != null ? parseInt(themesCount, 10) : null;
+
+  row.innerHTML = `
+    <div class="metric-card">
+      <div class="metric-value ${scoreVal != null ? 'metric-value--amber' : 'metric-value--muted'}" id="metric-score" aria-label="Sentiment score">${scoreVal != null ? '0.0' : 'N/A'}</div>
+      <div class="metric-label">Sentiment Score</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value ${negVal != null ? 'metric-value--red' : 'metric-value--muted'}" id="metric-neg" aria-label="Negative feedback percentage">${negVal != null ? '0' : 'N/A'}</div>
+      <div class="metric-label">Negative %</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value ${themesVal != null ? 'metric-value--purple' : 'metric-value--muted'}" id="metric-themes" aria-label="Number of themes identified">${themesVal != null ? '0' : 'N/A'}</div>
+      <div class="metric-label">Themes Found</div>
+    </div>
+  `;
+  row.classList.remove('hidden');
+
+  // Trigger count-up on numeric values
+  if (scoreVal  != null) countUp(document.getElementById('metric-score'),  scoreVal, 900);
+  if (negVal    != null) countUp(document.getElementById('metric-neg'),    negVal,   700);
+  if (themesVal != null) countUp(document.getElementById('metric-themes'), themesVal, 600);
+}
+
 // ─── State ───────────────────────────────────────────────────────
 const state = {
   currentStep: 1,
@@ -169,7 +266,9 @@ $('step1-next').addEventListener('click', () => {
 document.querySelectorAll('input[name="analysisType"]').forEach(radio => {
   radio.addEventListener('change', () => {
     state.analysisType = radio.value;
-    $('analyze-btn').disabled = false;
+    const btn = $('analyze-btn');
+    btn.disabled = false;
+    btn.removeAttribute('aria-disabled');
   });
 });
 
@@ -214,6 +313,8 @@ async function runAnalysis() {
     await sleep(600);
 
     renderReport(json);
+    renderMetricCards(json);
+    showPresentationSection();
     goToStep('report');
 
     // Update step indicator to show step 3 active
@@ -257,10 +358,16 @@ $('new-analysis-btn').addEventListener('click', () => {
   // Reset radio buttons
   document.querySelectorAll('input[name="analysisType"]').forEach(r => r.checked = false);
   state.analysisType = null;
-  $('analyze-btn').disabled = true;
+  const analyzeBtn = $('analyze-btn');
+  analyzeBtn.disabled = true;
+  analyzeBtn.setAttribute('aria-disabled', 'true');
   state.selectedFile = null;
   fileInput.value = '';
   updateDropZone(null);
+  // Hide presentation section and metrics
+  $('presentation-section').classList.add('hidden');
+  const metricsRow = $('metrics-row');
+  if (metricsRow) { metricsRow.classList.add('hidden'); metricsRow.innerHTML = ''; }
 });
 
 // ─── Export ───────────────────────────────────────────────────────
@@ -755,7 +862,7 @@ function getDomain(url) {
 
 function buildSection(title, iconClass, iconSVG, content, rawNode = false) {
   const section = document.createElement('div');
-  section.className = 'report-section';
+  section.className = 'report-section fade-up';
 
   const header = document.createElement('div');
   header.className = 'section-header';
@@ -817,3 +924,202 @@ function esc(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Presentation Agent — Frontend Logic
+   ═══════════════════════════════════════════════════════════════ */
+
+// ─── Presentation state ───────────────────────────────────────────
+const presState = {
+  slides: [],
+  theme: {},
+  currentSlide: 0,
+  pptxBase64: null,
+};
+
+// ─── Show presentation section after report renders ───────────────
+// Called from renderReport(); section appears but generate only fires on click.
+
+function showPresentationSection() {
+  const section = $('presentation-section');
+  section.classList.remove('hidden');
+  // Reset to input phase
+  showPresPhase('input');
+  $('pres-instructions').value = '';
+  section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showPresPhase(phase) {
+  $('pres-input-phase').classList.toggle('hidden', phase !== 'input');
+  $('pres-loading-phase').classList.toggle('hidden', phase !== 'loading');
+  $('pres-viewer-phase').classList.toggle('hidden', phase !== 'viewer');
+}
+
+// ─── Generate presentation (fires only on button click) ───────────
+
+$('generate-pres-btn').addEventListener('click', generatePresentation);
+
+async function generatePresentation() {
+  const instructions = $('pres-instructions').value.trim();
+  if (!instructions) {
+    $('pres-instructions').focus();
+    $('pres-instructions').classList.add('pres-input-error');
+    setTimeout(() => $('pres-instructions').classList.remove('pres-input-error'), 1800);
+    return;
+  }
+  if (!state.lastReport) return;
+
+  showPresPhase('loading');
+
+  try {
+    const res = await fetch('/api/presentation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        report: state.lastReport,
+        instructions,
+      }),
+    });
+
+    const json = await res.json();
+    if (!res.ok || !json.success) throw new Error(json.error || 'Presentation generation failed.');
+
+    presState.slides     = json.slides;
+    presState.theme      = json.theme || {};
+    presState.pptxBase64 = json.pptxBase64;
+    presState.currentSlide = 0;
+
+    renderSlideViewer();
+    buildThumbnails();
+    showPresPhase('viewer');
+
+  } catch (err) {
+    showPresPhase('input');
+    showError(err.message || 'Presentation generation failed. Please try again.');
+  }
+}
+
+// ─── Slide renderer ───────────────────────────────────────────────
+
+function renderSlideViewer() {
+  renderSlide(presState.currentSlide);
+  updateSlideCounter();
+  updateNavButtons();
+}
+
+function renderSlide(index) {
+  const slide = presState.slides[index];
+  const theme = presState.theme;
+  const total = presState.slides.length;
+  const viewport = $('slide-viewport');
+
+  if (slide.type === 'title') {
+    viewport.innerHTML = `
+      <div class="pres-slide pres-slide-title" style="background:${esc(theme.primary || '#2563eb')}">
+        <div class="pres-accent-stripe-left" style="background:${esc(theme.accent || '#f59e0b')}"></div>
+        <div class="pres-title-content">
+          <div class="pres-label">Voice of Customer Analysis</div>
+          <h1 class="pres-main-title">${esc(slide.title || '')}</h1>
+          ${slide.subtitle ? `<p class="pres-main-subtitle">${esc(slide.subtitle)}</p>` : ''}
+        </div>
+        <div class="pres-accent-bar-bottom" style="background:${esc(theme.accent || '#f59e0b')}"></div>
+      </div>`;
+  } else {
+    const bullets = (slide.body || []).filter(Boolean);
+    viewport.innerHTML = `
+      <div class="pres-slide pres-slide-content" style="background:${esc(theme.slideBackground || '#f8fafc')}">
+        <div class="pres-content-header" style="background:${esc(theme.primary || '#2563eb')}">
+          <div class="pres-accent-stripe-left" style="background:${esc(theme.accent || '#f59e0b')}"></div>
+          <h2 class="pres-content-title">${esc(slide.title || '')}</h2>
+          <span class="pres-slide-num">${index + 1} / ${total}</span>
+        </div>
+        ${slide.subtitle ? `<p class="pres-content-subtitle" style="color:${esc(theme.subtext || '#64748b')}">${esc(slide.subtitle)}</p>` : ''}
+        <ul class="pres-bullets" style="color:${esc(theme.text || '#1e293b')}">
+          ${bullets.map(b => `<li>${esc(b)}</li>`).join('')}
+        </ul>
+        <div class="pres-content-footer" style="border-color:${esc(theme.accent || '#f59e0b')}"></div>
+      </div>`;
+  }
+
+  // Sync thumbnail highlight
+  document.querySelectorAll('.slide-thumb').forEach((t, i) => {
+    t.classList.toggle('active', i === index);
+  });
+}
+
+function buildThumbnails() {
+  const strip = $('slide-thumbnails');
+  strip.innerHTML = '';
+  presState.slides.forEach((slide, i) => {
+    const thumb = document.createElement('button');
+    thumb.className = 'slide-thumb' + (i === 0 ? ' active' : '');
+    thumb.setAttribute('aria-label', `Slide ${i + 1}: ${slide.title}`);
+    thumb.innerHTML = `
+      <div class="thumb-inner" style="background:${esc(i === 0 || slide.type === 'title' ? (presState.theme.primary || '#2563eb') : (presState.theme.slideBackground || '#f8fafc'))}">
+        <div class="thumb-title" style="color:${esc(slide.type === 'title' ? '#fff' : (presState.theme.text || '#1e293b'))}">${esc(slide.title || '')}</div>
+        <div class="thumb-num">${i + 1}</div>
+      </div>`;
+    thumb.addEventListener('click', () => {
+      presState.currentSlide = i;
+      renderSlide(i);
+      updateSlideCounter();
+      updateNavButtons();
+    });
+    strip.appendChild(thumb);
+  });
+}
+
+function updateSlideCounter() {
+  $('slide-counter').textContent = `Slide ${presState.currentSlide + 1} of ${presState.slides.length}`;
+}
+
+function updateNavButtons() {
+  $('prev-slide-btn').disabled = presState.currentSlide === 0;
+  $('next-slide-btn').disabled = presState.currentSlide === presState.slides.length - 1;
+}
+
+// ─── Nav buttons ──────────────────────────────────────────────────
+
+$('prev-slide-btn').addEventListener('click', () => {
+  if (presState.currentSlide > 0) {
+    presState.currentSlide--;
+    renderSlide(presState.currentSlide);
+    updateSlideCounter();
+    updateNavButtons();
+  }
+});
+
+$('next-slide-btn').addEventListener('click', () => {
+  if (presState.currentSlide < presState.slides.length - 1) {
+    presState.currentSlide++;
+    renderSlide(presState.currentSlide);
+    updateSlideCounter();
+    updateNavButtons();
+  }
+});
+
+// ─── Download .pptx ───────────────────────────────────────────────
+
+$('download-pptx-btn').addEventListener('click', () => {
+  if (!presState.pptxBase64) return;
+  const byteChars = atob(presState.pptxBase64);
+  const byteNums  = new Uint8Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+  const blob = new Blob([byteNums], {
+    type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  });
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement('a');
+  a.href     = url;
+  a.download = `voc-presentation-${Date.now()}.pptx`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ─── Regenerate ───────────────────────────────────────────────────
+
+$('regenerate-pres-btn').addEventListener('click', () => {
+  showPresPhase('input');
+  $('pres-instructions').focus();
+});
+

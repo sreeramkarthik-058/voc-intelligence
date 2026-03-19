@@ -13,7 +13,7 @@
   <header class="header">
     <div class="header-inner">
       <div class="logo">
-        <div class="logo-icon">
+        <div class="logo-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44l-1.56-8.43A5 5 0 0 1 9.5 2Z"/>
             <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44l1.56-8.43A5 5 0 0 0 14.5 2Z"/>
@@ -24,54 +24,67 @@
           <span class="logo-sub">Powered by Claude</span>
         </div>
       </div>
+
+      <button class="dark-toggle" id="dark-toggle" aria-label="Toggle dark mode" aria-pressed="false">
+        <!-- Moon icon (shown in light mode) -->
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <!-- Sun icon (shown in dark mode) -->
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="5"/>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </button>
     </div>
   </header>
 
   <!-- Main -->
   <main class="main">
 
-    <!-- Step Indicator -->
-    <div class="steps" id="steps">
-      <div class="step active" data-step="1">
-        <div class="step-circle">1</div>
+    <!-- Step indicator -->
+    <div class="steps" id="steps" role="list" aria-label="Progress steps">
+      <div class="step active" data-step="1" role="listitem">
+        <div class="step-circle" aria-hidden="true">1</div>
         <span class="step-label">Input Feedback</span>
       </div>
-      <div class="step-connector"></div>
-      <div class="step" data-step="2">
-        <div class="step-circle">2</div>
+      <div class="step-connector" aria-hidden="true"></div>
+      <div class="step" data-step="2" role="listitem">
+        <div class="step-circle" aria-hidden="true">2</div>
         <span class="step-label">Choose Analysis</span>
       </div>
-      <div class="step-connector"></div>
-      <div class="step" data-step="3">
-        <div class="step-circle">3</div>
+      <div class="step-connector" aria-hidden="true"></div>
+      <div class="step" data-step="3" role="listitem">
+        <div class="step-circle" aria-hidden="true">3</div>
         <span class="step-label">View Report</span>
       </div>
     </div>
 
-    <!-- ── STEP 1: Input ─────────────────────────────────────── -->
-    <section class="card step-panel active" id="panel-1">
+    <!-- ── STEP 1: Input ──────────────────────────────────── -->
+    <section class="card step-panel active" id="panel-1" aria-label="Step 1: Add customer feedback">
       <div class="card-header">
         <h2>Add Customer Feedback</h2>
         <p>Paste raw feedback text or upload a file containing customer responses.</p>
       </div>
 
-      <div class="input-tabs">
-        <button class="tab-btn active" data-tab="paste">
-          <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
+      <div class="input-tabs" role="tablist" aria-label="Input method">
+        <button class="tab-btn active" data-tab="paste" role="tab" aria-selected="true" aria-controls="tab-paste" id="tab-btn-paste">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>
           Paste Text
         </button>
-        <button class="tab-btn" data-tab="upload">
-          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+        <button class="tab-btn" data-tab="upload" role="tab" aria-selected="false" aria-controls="tab-upload" id="tab-btn-upload">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
           Upload File
         </button>
       </div>
 
-      <!-- Paste Tab -->
-      <div class="tab-content active" id="tab-paste">
+      <!-- Paste tab -->
+      <div class="tab-content active" id="tab-paste" role="tabpanel" aria-labelledby="tab-btn-paste">
         <div class="textarea-wrapper">
           <textarea
             id="feedback-text"
             class="feedback-textarea"
+            aria-label="Customer feedback text"
             placeholder="Paste your customer feedback here...
 
 Example:
@@ -82,37 +95,37 @@ Example:
 - The mobile app crashes occasionally on iOS."
             rows="12"
           ></textarea>
-          <div class="char-count" id="char-count">0 characters</div>
+          <div class="char-count" id="char-count" aria-live="polite" aria-atomic="true">0 characters</div>
         </div>
       </div>
 
-      <!-- Upload Tab -->
-      <div class="tab-content" id="tab-upload">
-        <div class="drop-zone" id="drop-zone">
-          <input type="file" id="file-input" accept=".txt,.csv,.docx" hidden />
-          <div class="drop-zone-icon">
+      <!-- Upload tab -->
+      <div class="tab-content" id="tab-upload" role="tabpanel" aria-labelledby="tab-btn-upload">
+        <div class="drop-zone" id="drop-zone" role="button" tabindex="0" aria-label="File drop zone. Click or drag and drop a file here.">
+          <input type="file" id="file-input" accept=".txt,.csv,.docx" aria-label="Choose file to upload" hidden />
+          <div class="drop-zone-icon" aria-hidden="true">
             <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M28 8H12a4 4 0 00-4 4v24a4 4 0 004 4h24a4 4 0 004-4V20L28 8z"/>
               <path d="M28 8v12h12M24 26v-8M20 22l4-4 4 4"/>
             </svg>
           </div>
           <div class="drop-zone-text">
-            <p class="drop-zone-title">Drag & drop your file here</p>
-            <p class="drop-zone-sub">or <button class="link-btn" onclick="document.getElementById('file-input').click()">browse files</button></p>
+            <p class="drop-zone-title">Drag &amp; drop your file here</p>
+            <p class="drop-zone-sub">or <button class="link-btn" type="button" onclick="document.getElementById('file-input').click()">browse files</button></p>
           </div>
-          <div class="drop-zone-formats">
+          <div class="drop-zone-formats" aria-label="Supported formats">
             <span class="format-badge">.TXT</span>
             <span class="format-badge">.CSV</span>
             <span class="format-badge">.DOCX</span>
           </div>
           <div class="file-selected hidden" id="file-selected">
             <div class="file-info">
-              <svg viewBox="0 0 20 20" fill="currentColor" class="file-icon"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
+              <svg viewBox="0 0 20 20" fill="currentColor" class="file-icon" aria-hidden="true"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
               <span id="file-name">filename.csv</span>
               <span id="file-size" class="file-size-badge"></span>
             </div>
-            <button class="icon-btn" id="remove-file" title="Remove file">
-              <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            <button class="icon-btn" id="remove-file" aria-label="Remove selected file" type="button">
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
             </button>
           </div>
         </div>
@@ -120,26 +133,26 @@ Example:
 
       <div class="card-footer">
         <div></div>
-        <button class="btn btn-primary" id="step1-next">
+        <button class="btn btn-primary" id="step1-next" type="button">
           Continue
-          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
         </button>
       </div>
     </section>
 
-    <!-- ── STEP 2: Analysis Type ──────────────────────────────── -->
-    <section class="card step-panel" id="panel-2">
+    <!-- ── STEP 2: Analysis type ───────────────────────────── -->
+    <section class="card step-panel" id="panel-2" aria-label="Step 2: Choose analysis type">
       <div class="card-header">
         <h2>Choose Analysis Type</h2>
         <p>Select what kind of intelligence you want to extract from the feedback.</p>
       </div>
 
-      <div class="analysis-options">
+      <div class="analysis-options" role="radiogroup" aria-label="Analysis type">
 
         <label class="analysis-option" data-value="themes">
-          <input type="radio" name="analysisType" value="themes" />
+          <input type="radio" name="analysisType" value="themes" aria-label="Theme Extraction" />
           <div class="option-card">
-            <div class="option-icon themes-icon">
+            <div class="option-icon themes-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="3"/>
                 <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
@@ -147,23 +160,23 @@ Example:
             </div>
             <div class="option-content">
               <h3>Theme Extraction</h3>
-              <p>Identify recurring topics, patterns, and discussion areas within the feedback. Understand what customers are talking about most.</p>
+              <p>Identify recurring topics, patterns, and discussion areas within the feedback.</p>
               <ul class="option-features">
                 <li>Key themes with frequency scores</li>
                 <li>Representative quotes per theme</li>
                 <li>Actionable recommendations</li>
               </ul>
             </div>
-            <div class="option-check">
+            <div class="option-check" aria-hidden="true">
               <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
             </div>
           </div>
         </label>
 
         <label class="analysis-option" data-value="sentiment">
-          <input type="radio" name="analysisType" value="sentiment" />
+          <input type="radio" name="analysisType" value="sentiment" aria-label="Sentiment Analysis" />
           <div class="option-card">
-            <div class="option-icon sentiment-icon">
+            <div class="option-icon sentiment-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/>
                 <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/>
@@ -171,38 +184,38 @@ Example:
             </div>
             <div class="option-content">
               <h3>Sentiment Analysis</h3>
-              <p>Measure the emotional tone and sentiment across all feedback. Understand how customers feel and what's driving positive or negative reactions.</p>
+              <p>Measure the emotional tone and sentiment across all feedback.</p>
               <ul class="option-features">
                 <li>Overall sentiment score (1–10)</li>
                 <li>Positive / negative breakdown</li>
                 <li>Emotional tone profiling</li>
               </ul>
             </div>
-            <div class="option-check">
+            <div class="option-check" aria-hidden="true">
               <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
             </div>
           </div>
         </label>
 
         <label class="analysis-option" data-value="both">
-          <input type="radio" name="analysisType" value="both" />
+          <input type="radio" name="analysisType" value="both" aria-label="Full Analysis — Themes and Sentiment" />
           <div class="option-card featured">
             <div class="featured-badge">Most Popular</div>
-            <div class="option-icon both-icon">
+            <div class="option-icon both-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
               </svg>
             </div>
             <div class="option-content">
               <h3>Full Analysis <span class="badge-both">Themes + Sentiment</span></h3>
-              <p>Get the complete picture — both thematic patterns and sentiment insights in a single comprehensive report.</p>
+              <p>Get the complete picture — both thematic patterns and sentiment insights in one report.</p>
               <ul class="option-features">
                 <li>Everything in Themes + Sentiment</li>
                 <li>Unified executive summary</li>
                 <li>Cross-analysis insights</li>
               </ul>
             </div>
-            <div class="option-check">
+            <div class="option-check" aria-hidden="true">
               <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
             </div>
           </div>
@@ -211,21 +224,21 @@ Example:
       </div>
 
       <div class="card-footer">
-        <button class="btn btn-ghost" id="step2-back">
-          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+        <button class="btn btn-ghost" id="step2-back" type="button">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
           Back
         </button>
-        <button class="btn btn-primary" id="analyze-btn" disabled>
-          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd"/></svg>
+        <button class="btn btn-primary" id="analyze-btn" type="button" disabled aria-disabled="true">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd"/></svg>
           Run Analysis
         </button>
       </div>
     </section>
 
-    <!-- ── STEP 3: Loading ───────────────────────────────────── -->
-    <section class="card step-panel" id="panel-loading">
+    <!-- ── Loading ────────────────────────────────────────── -->
+    <section class="card step-panel" id="panel-loading" aria-label="Analysis in progress" aria-live="polite">
       <div class="loading-state">
-        <div class="loading-spinner">
+        <div class="loading-spinner" aria-hidden="true">
           <div class="spinner-ring"></div>
           <div class="spinner-logo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -236,7 +249,7 @@ Example:
         </div>
         <h3 class="loading-title">Analyzing Feedback</h3>
         <p class="loading-sub" id="loading-message">Reading and processing your customer feedback…</p>
-        <div class="loading-steps">
+        <div class="loading-steps" aria-label="Analysis steps">
           <div class="loading-step active" id="ls-1">Parsing feedback content</div>
           <div class="loading-step" id="ls-2">Running AI analysis</div>
           <div class="loading-step" id="ls-3">Generating insights</div>
@@ -245,45 +258,123 @@ Example:
       </div>
     </section>
 
-    <!-- ── STEP 3: Report ────────────────────────────────────── -->
-    <section class="step-panel" id="panel-report">
-      <!-- Report toolbar -->
+    <!-- ── STEP 3: Report ─────────────────────────────────── -->
+    <section class="step-panel" id="panel-report" aria-label="Analysis report">
+
+      <!-- Metric summary cards (shown after analysis) -->
+      <div id="metrics-row" class="metrics-row hidden" aria-label="Key metrics"></div>
+
+      <!-- Toolbar -->
       <div class="report-toolbar">
-        <button class="btn btn-ghost btn-sm" id="new-analysis-btn">
-          <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+        <button class="btn btn-ghost btn-sm" id="new-analysis-btn" type="button" aria-label="Start a new analysis">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
           New Analysis
         </button>
         <div class="export-group">
-          <span class="export-label">Export:</span>
-          <button class="btn btn-outline btn-sm" id="export-pdf-btn">
-            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/></svg>
+          <span class="export-label" id="export-label">Export:</span>
+          <button class="btn btn-outline btn-sm" id="export-pdf-btn" type="button" aria-label="Export report as PDF" aria-describedby="export-label">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/></svg>
             PDF
           </button>
-          <button class="btn btn-outline btn-sm" id="export-txt-btn">
-            <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
+          <button class="btn btn-outline btn-sm" id="export-txt-btn" type="button" aria-label="Export report as plain text" aria-describedby="export-label">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
             Plain Text
           </button>
         </div>
       </div>
 
-      <!-- Report content (this is what gets exported) -->
-      <div id="report-content">
+      <!-- Report content -->
+      <div id="report-content" aria-live="polite"></div>
+    </section>
+
+    <!-- ── Presentation agent section ────────────────────── -->
+    <section class="pres-section hidden" id="presentation-section" aria-label="Generate executive presentation">
+
+      <!-- Phase 1: instructions input -->
+      <div id="pres-input-phase">
+        <div class="pres-section-header">
+          <div class="pres-section-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path d="M8 21h8M12 17v4"/>
+            </svg>
+          </div>
+          <div>
+            <h3>Generate Executive Presentation</h3>
+            <p class="pres-section-desc">Describe your preferred style, colour theme, number of slides, and audience. Claude will structure the report into a polished deck.</p>
+          </div>
+        </div>
+        <textarea
+          id="pres-instructions"
+          class="pres-instructions-textarea"
+          rows="3"
+          aria-label="Presentation instructions"
+          placeholder="e.g. 6 slides, navy and gold colour scheme, minimal style for C-suite executives, focus on actionable next steps"
+        ></textarea>
+        <div class="pres-input-footer">
+          <button class="btn btn-primary" id="generate-pres-btn" type="button" aria-label="Generate presentation">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd"/></svg>
+            Generate Presentation
+          </button>
+        </div>
       </div>
+
+      <!-- Phase 2: loading -->
+      <div id="pres-loading-phase" class="hidden" aria-live="polite">
+        <div class="pres-loading">
+          <div class="pres-spinner" aria-hidden="true">
+            <div class="spinner-ring"></div>
+          </div>
+          <p class="pres-loading-title">Building your presentation…</p>
+          <p class="pres-loading-sub">Claude is structuring the slides and generating your .pptx file.</p>
+        </div>
+      </div>
+
+      <!-- Phase 3: viewer -->
+      <div id="pres-viewer-phase" class="hidden">
+        <div class="slide-viewer">
+          <div class="slide-viewport" id="slide-viewport" aria-label="Slide preview"></div>
+          <div class="slide-nav" role="navigation" aria-label="Slide navigation">
+            <button class="btn btn-ghost btn-sm" id="prev-slide-btn" type="button" aria-label="Previous slide">
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+              Previous
+            </button>
+            <span class="slide-counter" id="slide-counter" aria-live="polite" aria-atomic="true">Slide 1 of 1</span>
+            <button class="btn btn-ghost btn-sm" id="next-slide-btn" type="button" aria-label="Next slide">
+              Next
+              <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            </button>
+          </div>
+          <div class="slide-thumbnails" id="slide-thumbnails" role="list" aria-label="Slide thumbnails"></div>
+        </div>
+
+        <div class="pres-actions">
+          <button class="btn btn-primary" id="download-pptx-btn" type="button" aria-label="Download PowerPoint file">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            Download .pptx
+          </button>
+          <button class="btn btn-outline btn-sm" id="regenerate-pres-btn" type="button" aria-label="Regenerate presentation with new instructions">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+            Regenerate
+          </button>
+        </div>
+      </div>
+
     </section>
 
     <!-- Error panel -->
-    <div class="error-banner hidden" id="error-banner">
-      <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+    <div class="error-banner hidden" id="error-banner" role="alert" aria-live="assertive">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
       <span id="error-message">Something went wrong.</span>
-      <button class="icon-btn" id="close-error">
-        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+      <button class="icon-btn" id="close-error" type="button" aria-label="Dismiss error">
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
       </button>
     </div>
 
   </main>
 
   <footer class="footer">
-    <p>VoC Intelligence Tool &mdash; Powered by Claude Opus 4.6</p>
+    <p>VoC Intelligence Tool &mdash; Powered by Claude Haiku</p>
   </footer>
 
   <script src="app.js"></script>
