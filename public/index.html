@@ -4,46 +4,93 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Customer Sentiment Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="hero.css" />
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
 </head>
 <body>
 
-  <!-- Header -->
-  <header class="header">
-    <div class="header-inner">
-      <div class="logo">
-        <div class="logo-icon" aria-hidden="true">
+  <!-- Hero (replaces old header — acts as landing page) -->
+  <section class="hero" id="hero-section">
+    <canvas id="hero-canvas" class="hero-canvas"></canvas>
+
+    <!-- Top bar -->
+    <div class="hero-bar">
+      <div class="hero-brand">
+        <div class="hero-logo" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44l-1.56-8.43A5 5 0 0 1 9.5 2Z"/>
             <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44l1.56-8.43A5 5 0 0 0 14.5 2Z"/>
           </svg>
         </div>
-        <div class="logo-text">
-          <span class="logo-title">Customer Sentiment Analysis</span>
-          <span class="logo-sub" id="header-tagline">Skim through your customer responses to find what really matters</span>
+        <span class="hero-brand-name">Customer Sentiment Analysis</span>
+      </div>
+      <div class="hero-bar-actions">
+        <button class="dark-toggle" id="dark-toggle" aria-label="Toggle dark mode" aria-pressed="false">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero content -->
+    <div class="hero-content">
+      <div class="hero-badge">
+        <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.547a1 1 0 01.64 1.898l-1.004.34a6 6 0 11-4.394 7.896A1 1 0 1013.73 14.8a4 4 0 002.766-5.036L15 10.234V14a1 1 0 11-2 0V9.42l-4-1.6V14a1 1 0 11-2 0V7.82l-1.595.638a1 1 0 01-.744-1.858L10 4.323V3a1 1 0 011-1z"/></svg>
+        vibe-coded by a PM who googles "what is a server"
+      </div>
+
+      <h1 class="hero-title">
+        Your customers are talking.<br>
+        <span class="hero-title-accent">Let's eavesdrop.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Paste feedback, upload a file, and let AI do the part you'd normally delegate to an intern.
+        Themes, sentiment, exec decks — all without writing a single line of SQL.
+      </p>
+
+      <div class="hero-input-wrap">
+        <textarea
+          id="hero-feedback-text"
+          class="hero-textarea"
+          aria-label="Paste customer feedback"
+          placeholder="Paste your customer feedback here...&#10;&#10;Pro tip: The angrier the feedback, the more interesting the analysis."
+          rows="4"
+        ></textarea>
+
+        <div class="hero-input-row">
+          <button class="hero-cta" id="hero-analyze-btn" type="button">
+            Make sense of this mess
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+          <span class="hero-or">or</span>
+          <button class="hero-upload-btn" id="hero-upload-btn" type="button">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+            Upload a file instead
+          </button>
         </div>
       </div>
 
-      <button class="dark-toggle" id="dark-toggle" aria-label="Toggle dark mode" aria-pressed="false">
-        <!-- Moon icon (shown in light mode) -->
-        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-        </svg>
-        <!-- Sun icon (shown in dark mode) -->
-        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="12" cy="12" r="5"/>
-          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-        </svg>
-      </button>
+      <p class="hero-quip">
+        Built with zero engineering skills, mass caffeine, and one very patient AI.<br>
+        If this breaks, it's a feature.
+      </p>
     </div>
-  </header>
+  </section>
 
   <!-- Main -->
   <main class="main">
 
-    <!-- Step indicator -->
-    <div class="steps" id="steps" role="list" aria-label="Progress steps">
+    <!-- Step indicator (hidden until hero is dismissed) -->
+    <div class="steps hidden" id="steps" role="list" aria-label="Progress steps">
       <div class="step active" data-step="1" role="listitem">
         <div class="step-circle" aria-hidden="true">1</div>
         <span class="step-label">Input Feedback</span>
@@ -60,8 +107,8 @@
       </div>
     </div>
 
-    <!-- ── STEP 1: Input ──────────────────────────────────── -->
-    <section class="card step-panel active" id="panel-1" aria-label="Step 1: Add customer feedback">
+    <!-- ── STEP 1: Input (hidden on load — hero handles the landing page) -->
+    <section class="card step-panel" id="panel-1" aria-label="Step 1: Add customer feedback">
       <div class="card-header">
         <h2>Add Customer Feedback</h2>
         <p>Paste raw feedback text or upload a file containing customer responses.</p>
@@ -143,8 +190,8 @@ Example:
     <!-- ── STEP 2: Analysis type ───────────────────────────── -->
     <section class="card step-panel" id="panel-2" aria-label="Step 2: Choose analysis type">
       <div class="card-header">
-        <h2>Choose Analysis Type</h2>
-        <p>Select what kind of intelligence you want to extract from the feedback.</p>
+        <h2>Choose Your Adventure</h2>
+        <p>Pick how deep you want to go. All options were vibe-coded with equal care.</p>
       </div>
 
       <div class="analysis-options" role="radiogroup" aria-label="Analysis type">
@@ -247,13 +294,13 @@ Example:
             </svg>
           </div>
         </div>
-        <h3 class="loading-title">Analyzing Feedback</h3>
-        <p class="loading-sub" id="loading-message">Reading and processing your customer feedback…</p>
+        <h3 class="loading-title">Crunching the vibes...</h3>
+        <p class="loading-sub" id="loading-message">Teaching AI to read angry emails. This usually takes 10–15 seconds.</p>
         <div class="loading-steps" aria-label="Analysis steps">
-          <div class="loading-step active" id="ls-1">Parsing feedback content</div>
-          <div class="loading-step" id="ls-2">Running AI analysis</div>
-          <div class="loading-step" id="ls-3">Generating insights</div>
-          <div class="loading-step" id="ls-4">Building your report</div>
+          <div class="loading-step active" id="ls-1">Reading the room...</div>
+          <div class="loading-step" id="ls-2">Asking AI to do the hard part</div>
+          <div class="loading-step" id="ls-3">Finding patterns humans missed</div>
+          <div class="loading-step" id="ls-4">Making it look like you did the work</div>
         </div>
       </div>
     </section>
@@ -268,7 +315,7 @@ Example:
       <div class="action-bar hidden" id="action-bar">
         <button class="btn btn-primary" id="action-pres-btn" type="button" aria-label="Generate executive presentation">
           <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd"/></svg>
-          Generate Presentation
+          Make me look smart in a meeting
         </button>
         <div class="action-bar-right">
           <button class="btn btn-outline btn-sm" id="export-pdf-btn" type="button" aria-label="Export report as PDF">
@@ -521,6 +568,9 @@ Example:
     <p>&copy; 2025 Customer Sentiment Analysis</p>
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
   <script src="app.js"></script>
+  <script src="hero.js"></script>
 </body>
 </html>

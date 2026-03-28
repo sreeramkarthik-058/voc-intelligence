@@ -30,6 +30,61 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// ─── Hero → Wizard bridge ─────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  const heroSection    = document.getElementById('hero-section');
+  const heroTextarea   = document.getElementById('hero-feedback-text');
+  const heroAnalyzeBtn = document.getElementById('hero-analyze-btn');
+  const heroUploadBtn  = document.getElementById('hero-upload-btn');
+  const feedbackText   = document.getElementById('feedback-text');
+
+  if (!heroSection || !heroAnalyzeBtn) return;
+
+  function dismissHero() {
+    heroSection.classList.add('hidden');
+    document.getElementById('steps').classList.remove('hidden');
+  }
+
+  // "Make sense of this mess" button
+  heroAnalyzeBtn.addEventListener('click', () => {
+    const text = heroTextarea.value.trim();
+    if (!text || text.length < 20) {
+      heroTextarea.style.animation = 'shake 0.4s ease';
+      heroTextarea.focus();
+      setTimeout(() => { heroTextarea.style.animation = ''; }, 500);
+      return;
+    }
+
+    feedbackText.value = text;
+    state.activeTab = 'paste';
+    dismissHero();
+    goToStep(2);
+  });
+
+  // "Upload a file instead" button
+  heroUploadBtn.addEventListener('click', () => {
+    dismissHero();
+    // Activate upload tab in panel-1
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-btn-upload').classList.add('active');
+    document.getElementById('tab-upload').classList.add('active');
+    state.activeTab = 'upload';
+    goToStep(1);
+  });
+
+  // Keep hidden panel-1 textarea in sync with hero textarea
+  if (heroTextarea) {
+    heroTextarea.addEventListener('input', () => {
+      feedbackText.value = heroTextarea.value;
+      const count = heroTextarea.value.length;
+      const charCount = document.getElementById('char-count');
+      if (charCount) charCount.textContent = count.toLocaleString() + ' character' + (count !== 1 ? 's' : '');
+    });
+  }
+});
+
 // ─── Count-up animation ───────────────────────────────────────────
 
 function countUp(el, target, duration = 900) {
@@ -122,6 +177,10 @@ const panels = {
 // ─── Step navigation ─────────────────────────────────────────────
 
 function goToStep(step) {
+  // Hero is only shown when explicitly restored (new-analysis flow)
+  const hero = document.getElementById('hero-section');
+  if (hero) hero.classList.toggle('hidden', step !== 'hero');
+
   // Hide all panels
   Object.values(panels).forEach(p => p && p.classList.remove('active'));
 
@@ -358,7 +417,17 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 // ─── New Analysis button ──────────────────────────────────────────
 
 $('new-analysis-btn').addEventListener('click', () => {
-  goToStep(1);
+  // Restore hero landing page
+  const hero = document.getElementById('hero-section');
+  if (hero) {
+    hero.classList.remove('hidden');
+    document.getElementById('steps').classList.add('hidden');
+    const heroTA = document.getElementById('hero-feedback-text');
+    if (heroTA) heroTA.value = '';
+  }
+  // Hide wizard panels (don't call goToStep so hero stays visible)
+  Object.values(panels).forEach(p => p && p.classList.remove('active'));
+
   // Reset radio buttons
   document.querySelectorAll('input[name="analysisType"]').forEach(r => r.checked = false);
   state.analysisType = null;
@@ -1582,8 +1651,8 @@ function renderThemesTab(report) {
 
   if (analysisType === 'sentiment') {
     container.innerHTML = tabEmpty(
-      'Themes not included in this analysis.',
-      'Run a Full Analysis to see theme extraction alongside sentiment.');
+      'No themes here — you picked sentiment only.',
+      'No judgment, we\'ve all been there. Run Full Analysis to see theme extraction alongside sentiment.');
     return;
   }
 
@@ -1613,8 +1682,8 @@ function renderSentimentTab(report) {
 
   if (analysisType === 'themes') {
     container.innerHTML = tabEmpty(
-      'Sentiment not included in this analysis.',
-      'Run a Full Analysis to see sentiment alongside themes.');
+      'No vibes to read — you picked themes only.',
+      'Run a Full Analysis for the emotional rollercoaster.');
     return;
   }
 
@@ -1693,7 +1762,7 @@ function renderVoicesTab(report) {
   }
 
   if (!quotes.length) {
-    container.innerHTML = tabEmpty('No notable quotes were extracted from this analysis.');
+    container.innerHTML = tabEmpty('No hot takes found. Your customers were suspiciously chill.');
     return;
   }
 
@@ -1723,8 +1792,8 @@ function renderMarketTab(report) {
 
   if (!report.marketResearch?.themes?.length) {
     container.innerHTML = tabEmpty(
-      'Market research was not included in this analysis.',
-      'Set the EXA_API_KEY environment variable and run a new analysis to see web research results here.');
+      'Market research is offline — the EXA_API_KEY is taking a personal day.',
+      'Set it in your .env to unlock this.');
     return;
   }
 
