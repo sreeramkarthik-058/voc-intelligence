@@ -1,15 +1,15 @@
 # Unfiltered
 
-AI-powered customer feedback analysis tool. Branded as "Unfiltered — raw customer truth, no sugar coating." Built by @nocodepm (Sreeram Karthik Sonti). Paste text or upload CSV/Word docs → Claude Haiku analyzes themes & sentiment → Exa searches market context → generates downloadable .pptx executive presentations.
+AI-powered customer feedback analysis tool. Branded as "Unfiltered — raw customer truth, no sugar coating." Built by @nocodepm (Sreeram Karthik Sonti). Paste text or upload CSV/Word docs → Claude Haiku analyzes themes & sentiment → generates downloadable .pptx executive presentations.
 
 ## Tech stack
 
-Frontend: HTML, CSS, vanilla JS · Backend: Node.js + Express · AI: Claude Haiku (claude-haiku-4-5) via @anthropic-ai/sdk · Search: exa-js · PPTX: pptxgenjs v4 · File parsing: mammoth, csv-parse, multer · Template parsing: adm-zip + fast-xml-parser · PDF export: html2pdf.js (CDN, client-side)
+Frontend: HTML, CSS, vanilla JS · Backend: Node.js + Express · AI: Claude Haiku (claude-haiku-4-5) via @anthropic-ai/sdk · PPTX: pptxgenjs v4 · File parsing: mammoth, csv-parse, multer · Template parsing: adm-zip + fast-xml-parser · PDF export: html2pdf.js (CDN, client-side)
 
 ## Architecture
 
 - `server.js` — Express server; registers API route files
-- `routes/analyze.js` — analysis route (Claude Haiku + optional Exa)
+- `routes/analyze.js` — analysis route (Claude Haiku)
 - `routes/presentation.js` — presentation agent + template extraction
 - `utils/fileParser.js` — CSV and Word parsing
 - `utils/templateParser.js` — extracts theme from .pptx

@@ -468,7 +468,7 @@ function exportText() {
 }
 
 function buildPlainText(report) {
-  const { analysisType, data, metadata, marketResearch } = report;
+  const { analysisType, data, metadata } = report;
   const lines = [];
   const hr = '═'.repeat(60);
   const sep = '─'.repeat(60);
@@ -492,20 +492,6 @@ function buildPlainText(report) {
     appendThemesText(lines, data, sep);
   } else {
     appendSentimentText(lines, data, sep);
-  }
-
-  if (marketResearch?.themes?.length) {
-    lines.push('MARKET RESEARCH');
-    lines.push(sep);
-    marketResearch.themes.forEach(theme => {
-      lines.push(`\n${theme.name.toUpperCase()}`);
-      theme.sources.forEach((s, i) => {
-        lines.push(`  ${i + 1}. ${s.title}`);
-        lines.push(`     ${s.url}`);
-        if (s.summary) lines.push(`     ${s.summary}`);
-      });
-    });
-    lines.push('');
   }
 
   return lines.join('\n');
@@ -816,43 +802,6 @@ function buildThemeCard(theme) {
   return card;
 }
 
-// ─── Market research renderer ─────────────────────────────────────
-
-function renderMarketResearch(container, data) {
-  const grid = document.createElement('div');
-  grid.className = 'market-research-grid';
-
-  data.themes.forEach(theme => {
-    const themeDiv = document.createElement('div');
-    themeDiv.className = 'market-research-theme';
-    themeDiv.innerHTML = `
-      <div class="market-theme-name">${esc(theme.name)}</div>
-      <div class="source-cards">
-        ${theme.sources.map(s => buildSourceCardHTML(s)).join('')}
-      </div>
-    `;
-    grid.appendChild(themeDiv);
-  });
-
-  container.appendChild(buildSection('Market Research', 'market', iconMarketResearch(), grid, true));
-}
-
-function buildSourceCardHTML(source) {
-  const domain = getDomain(source.url);
-  return `
-    <a class="source-card" href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">
-      <div class="source-card-title">${esc(source.title)}</div>
-      <div class="source-card-domain">${esc(domain)}</div>
-      ${source.summary ? `<div class="source-card-summary">${esc(source.summary)}</div>` : ''}
-    </a>
-  `;
-}
-
-function getDomain(url) {
-  try { return new URL(url).hostname.replace('www.', ''); }
-  catch { return url; }
-}
-
 // ─── Section builder ──────────────────────────────────────────────
 
 function buildSection(title, iconClass, iconSVG, content, rawNode = false) {
@@ -896,7 +845,6 @@ const iconDrivers = () => `<svg viewBox="0 0 24 24" fill="none" stroke="currentC
 const iconTone = () => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`;
 const iconQuotes = () => iconSVG('M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z');
 const iconCheck = () => `<svg viewBox="0 0 20 20" fill="currentColor" width="17" height="17"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>`;
-const iconMarketResearch = () => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35M8 11a3 3 0 006 0 3 3 0 00-6 0"/></svg>`;
 
 // ─── DOM utilities ────────────────────────────────────────────────
 
@@ -1189,7 +1137,7 @@ function renderSlide(index) {
     case 'title': {
       html = `
         <div class="pres-slide" style="background:${bg};color:${text};flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:24px">
-          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:${muted}">Unfiltered</div>
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:${muted}">UNFILTERED</div>
           <h1 style="font-size:1.35rem;font-weight:800;line-height:1.2;max-width:90%;margin:0">${esc(slide.title || '')}</h1>
           ${slide.subtitle ? `<p style="font-size:0.82rem;color:${muted};margin:0;max-width:85%">${esc(slide.subtitle)}</p>` : ''}
           ${slide.accent ? `<div style="margin-top:4px;font-size:0.9rem;font-weight:700;color:${accent}">${esc(slide.accent)}</div>` : ''}
@@ -1510,6 +1458,17 @@ function initReportTabs() {
 
 document.addEventListener('DOMContentLoaded', initReportTabs);
 
+(function(){
+  var btn = document.getElementById('scroll-top-btn');
+  if(!btn) return;
+  window.addEventListener('scroll', function(){
+    btn.classList.toggle('visible', window.scrollY > 400);
+  });
+  btn.addEventListener('click', function(){
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+
 // ─── Helpers ──────────────────────────────────────────────────────
 
 // Normalize topFindings to always be {text, severity} objects
@@ -1561,7 +1520,6 @@ function renderReportTabs(report) {
   renderThemesTab(report);
   renderSentimentTab(report);
   renderVoicesTab(report);
-  renderMarketTab(report);
 }
 
 // ─── Tab: Overview ────────────────────────────────────────────────
@@ -1753,21 +1711,5 @@ function renderVoicesTab(report) {
 
   container.appendChild(buildTabSection('Notable Quotes',
     `<div class="voice-quotes-grid">${html}</div>`));
-}
-
-// ─── Tab: Market ──────────────────────────────────────────────────
-
-function renderMarketTab(report) {
-  const container = $('tab-panel-market');
-  container.innerHTML = '';
-
-  if (!report.marketResearch?.themes?.length) {
-    container.innerHTML = tabEmpty(
-      'Market research is offline — the EXA_API_KEY is taking a personal day.',
-      'Set it in your .env and run a new analysis to unlock web research.');
-    return;
-  }
-
-  renderMarketResearch(container, report.marketResearch);
 }
 

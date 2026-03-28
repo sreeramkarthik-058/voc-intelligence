@@ -1,13 +1,13 @@
 ---
 name: analysis-route
-description: Rules for the analysis API route, AI prompt schemas, and Exa market research integration. Use when working on routes/analyze.js, AI prompts, or market research features.
+description: Rules for the analysis API route and AI prompt schemas. Use when working on routes/analyze.js or AI prompts.
 ---
 
 # Analysis route
 
 ## Route: POST /api/analyze (routes/analyze.js)
 
-Accepts multipart form: `analysisType` (themes | sentiment | both) + text or file. Calls Claude Haiku with a JSON-only prompt; parses structured response. Exa search: called once per identified theme if EXA_API_KEY is set; non-fatal if missing. Returns `{ success, analysisType, data, marketResearch, metadata }`.
+Accepts multipart form: `analysisType` (themes | sentiment | both) + text or file. Calls Claude Haiku with a JSON-only prompt; parses structured response. Returns `{ success, analysisType, data, metadata }`.
 
 ## AI prompt schema
 
@@ -36,12 +36,6 @@ All prompts return JSON only — no markdown fences.
 ### Backward compatibility
 
 `normalizeFindings()` in app.js converts old string-array topFindings to `[{text, severity}]`.
-
-## Exa market research
-
-- Called once per identified theme
-- Non-fatal: if EXA_API_KEY is missing, analysis still works; Market tab shows friendly empty state
-- Results rendered by `renderMarketResearch()` in app.js
 
 ## Cost rules
 

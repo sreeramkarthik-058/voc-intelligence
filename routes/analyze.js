@@ -1,8 +1,6 @@
 const express = require('express');
 const multer = require('multer');
 const Anthropic = require('@anthropic-ai/sdk');
-const { default: Exa } = require('exa-js');
-
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const { parseFile } = require('../utils/fileParser');
 
@@ -22,51 +20,6 @@ const upload = multer({
     }
   },
 });
-
-// ─── Exa market research ────────────────────────────────────────────────────
-
-function extractSearchTerms(analysisType, data) {
-  if (analysisType === 'themes') {
-    return (data.themes || []).map(t => t.name).slice(0, 3);
-  }
-  if (analysisType === 'both') {
-    return (data.themes?.list || []).map(t => t.name).slice(0, 3);
-  }
-  // sentiment-only: use top drivers as search terms
-  const terms = [
-    ...(data.drivers?.positive?.slice(0, 2) || []),
-    ...(data.drivers?.negative?.slice(0, 1) || []),
-  ];
-  return terms.slice(0, 3);
-}
-
-async function fetchMarketResearch(terms) {
-  const exa = new Exa(process.env.EXA_API_KEY);
-
-  const results = await Promise.all(
-    terms.map(async (term) => {
-      try {
-        const res = await exa.search(
-          `${term} customer experience industry insights`,
-          {
-            numResults: 3,
-            contents: { summary: { query: `one sentence overview of ${term}` } },
-          }
-        );
-        const sources = (res.results || []).map(r => ({
-          title: r.title || 'Untitled',
-          url: r.url,
-          summary: r.summary || '',
-        }));
-        return { name: term, sources };
-      } catch {
-        return { name: term, sources: [] };
-      }
-    })
-  );
-
-  return { themes: results.filter(r => r.sources.length > 0) };
-}
 
 // ─── Prompt builders ────────────────────────────────────────────────────────
 
@@ -274,22 +227,10 @@ router.post('/analyze', upload.single('file'), async (req, res) => {
       return res.status(500).json({ error: 'Failed to parse analysis response. Please try again.' });
     }
 
-    // Market research via Exa (optional — skipped if key not set)
-    let marketResearch = null;
-    if (process.env.EXA_API_KEY) {
-      try {
-        const terms = extractSearchTerms(analysisType, analysisData);
-        if (terms.length > 0) marketResearch = await fetchMarketResearch(terms);
-      } catch (err) {
-        console.error('Market research error (non-fatal):', err.message);
-      }
-    }
-
     res.json({
       success: true,
       analysisType,
       data: analysisData,
-      marketResearch,
       metadata: {
         feedbackLength: feedbackText.length,
         source: req.file ? req.file.originalname : 'pasted text',
