@@ -13,13 +13,149 @@
   flex-direction: column;
 }
 
-.hero-canvas {
+/* ─── Decorative orbs ────────────────────────────────────────── */
+
+.hero-orbs {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  overflow: hidden;
   z-index: 0;
-  pointer-events: auto;
+  pointer-events: none;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.12;
+  filter: blur(1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb { animation: none !important; }
+}
+
+/* Large indigo orb — top right corner */
+.orb-1 {
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle at 30% 30%, #818CF8, #4F46E5);
+  top: -60px;
+  right: -40px;
+  opacity: 0.08;
+  animation: orbFloat1 14s ease-in-out infinite;
+}
+
+/* Medium cyan orb — bottom left */
+.orb-2 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle at 40% 40%, #22D3EE, #0891B2);
+  bottom: 40px;
+  left: -30px;
+  opacity: 0.1;
+  animation: orbFloat2 18s ease-in-out infinite;
+}
+
+/* Small indigo orb — top left area */
+.orb-3 {
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle at 50% 50%, #A5B4FC, #818CF8);
+  top: 80px;
+  left: 60px;
+  opacity: 0.1;
+  animation: orbFloat3 12s ease-in-out infinite;
+}
+
+/* Tiny cyan orb — right side middle */
+.orb-4 {
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(circle at 50% 50%, #22D3EE, #06B6D4);
+  top: 45%;
+  right: 80px;
+  opacity: 0.12;
+  animation: orbFloat1 16s ease-in-out infinite reverse;
+}
+
+/* Medium dark orb — bottom right */
+.orb-5 {
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle at 30% 70%, #6366F1, #312E81);
+  bottom: -20px;
+  right: 10%;
+  opacity: 0.07;
+  animation: orbFloat2 20s ease-in-out infinite;
+}
+
+/* Small accent orb — left side middle */
+.orb-6 {
+  width: 44px;
+  height: 44px;
+  background: radial-gradient(circle at 50% 50%, #C4B5FD, #818CF8);
+  top: 55%;
+  left: 40px;
+  opacity: 0.15;
+  animation: orbFloat3 10s ease-in-out infinite;
+}
+
+/* Tiny orb — bottom center-left, well below content */
+.orb-7 {
+  width: 70px;
+  height: 70px;
+  background: radial-gradient(circle at 50% 50%, #67E8F9, #22D3EE);
+  bottom: 20px;
+  left: 35%;
+  opacity: 0.08;
+  animation: orbFloat1 22s ease-in-out infinite;
+}
+
+@keyframes orbFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25%      { transform: translate(8px, -12px) scale(1.03); }
+  50%      { transform: translate(-5px, -20px) scale(0.97); }
+  75%      { transform: translate(12px, -8px) scale(1.02); }
+}
+
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(-10px, 10px) scale(1.04); }
+  66%      { transform: translate(8px, -6px) scale(0.98); }
+}
+
+@keyframes orbFloat3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(6px, -10px) scale(1.05); }
+}
+
+/* ─── Cursor glow follower ───────────────────────────────────── */
+
+.cursor-glow {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(129,140,248,.15) 0%, rgba(129,140,248,.04) 40%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.15s ease-out;
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
+}
+
+.cursor-glow.visible {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-glow { display: none; }
+}
+
+/* Hide on touch devices — no cursor to follow */
+@media (hover: none) {
+  .cursor-glow { display: none; }
 }
 
 /* ─── Hero header bar ────────────────────────────────────────── */
@@ -60,12 +196,33 @@
   letter-spacing: -.01em;
 }
 
+.hero-brand-by {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--text-tertiary);
+}
+
 .hero-bar-actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+.social-link {
+  color: var(--text-tertiary);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  transition: color var(--transition), background var(--transition);
+}
+.social-link:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
 
 /* ─── Hero content overlay ───────────────────────────────────── */
 
@@ -127,6 +284,8 @@
 /* ─── Hero input area ────────────────────────────────────────── */
 
 .hero-input-wrap {
+  position: relative;
+  z-index: 10;
   width: 100%;
   max-width: 520px;
   display: flex;
@@ -158,6 +317,8 @@
 .hero-textarea::placeholder { color: var(--text-tertiary); }
 
 .hero-input-row {
+  position: relative;
+  z-index: 10;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -226,6 +387,8 @@
 /* ─── Hero footer quip ───────────────────────────────────────── */
 
 .hero-quip {
+  position: relative;
+  z-index: 10;
   margin-top: 20px;
   font-size: 0.72rem;
   color: var(--text-tertiary);
@@ -262,6 +425,9 @@
   .hero-input-wrap { max-width: 100%; }
   .hero-input-row { flex-wrap: wrap; }
   .hero-cta { width: 100%; justify-content: center; }
+  .orb-1 { width: 180px; height: 180px; }
+  .orb-4 { display: none; }
+  .orb-5 { display: none; }
 }
 
 @media (max-width: 480px) {
@@ -277,4 +443,10 @@
   .hero-input-row { gap: 8px; }
   .hero-upload-btn { width: 100%; justify-content: center; }
   .hero-quip { font-size: 0.68rem; }
+  .orb-1 { width: 120px; height: 120px; top: -30px; right: -20px; }
+  .orb-2 { width: 100px; height: 100px; }
+  .orb-3 { display: none; }
+  .orb-4 { display: none; }
+  .orb-5 { display: none; }
+  .orb-6 { display: none; }
 }

@@ -1189,7 +1189,7 @@ function renderSlide(index) {
     case 'title': {
       html = `
         <div class="pres-slide" style="background:${bg};color:${text};flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:24px">
-          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:${muted}">Customer Sentiment Analysis</div>
+          <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:${muted}">Unfiltered</div>
           <h1 style="font-size:1.35rem;font-weight:800;line-height:1.2;max-width:90%;margin:0">${esc(slide.title || '')}</h1>
           ${slide.subtitle ? `<p style="font-size:0.82rem;color:${muted};margin:0;max-width:85%">${esc(slide.subtitle)}</p>` : ''}
           ${slide.accent ? `<div style="margin-top:4px;font-size:0.9rem;font-weight:700;color:${accent}">${esc(slide.accent)}</div>` : ''}
@@ -1764,7 +1764,7 @@ function renderMarketTab(report) {
   if (!report.marketResearch?.themes?.length) {
     container.innerHTML = tabEmpty(
       'Market research is offline — the EXA_API_KEY is taking a personal day.',
-      'Set it in your .env to unlock this.');
+      'Set it in your .env and run a new analysis to unlock web research.');
     return;
   }
 

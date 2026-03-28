@@ -1,6 +1,6 @@
-# Customer Sentiment Analysis
+# Unfiltered
 
-AI-powered feedback analysis tool for Product Managers. Paste text or upload CSV/Word docs → Claude Haiku analyzes themes & sentiment → Exa searches market context → generates downloadable .pptx executive presentations.
+AI-powered customer feedback analysis tool. Branded as "Unfiltered — raw customer truth, no sugar coating." Built by @nocodepm (Sreeram Karthik Sonti). Paste text or upload CSV/Word docs → Claude Haiku analyzes themes & sentiment → Exa searches market context → generates downloadable .pptx executive presentations.
 
 ## Tech stack
 
