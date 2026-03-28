@@ -33,8 +33,8 @@
 
   // ─── Color palettes ───────────────────────────────────────────
   const PALETTES = {
-    light: ['#F5E6D3', '#E8D5C4', '#D4C4B0', '#C9B8A4', '#DDD0C0', '#E0CFC0'],
-    dark:  ['#3D3530', '#2A2520', '#1F1B18', '#4A4035', '#352F28', '#28231E'],
+    light: ['#2D2B55', '#1E1B4B', '#312E81', '#3730A3', '#1E293B', '#334155'],
+    dark:  ['#2D2B55', '#1E1B4B', '#312E81', '#3730A3', '#1E293B', '#334155'],
   };
 
   // ─── Physics engine ───────────────────────────────────────────
@@ -191,8 +191,7 @@
     }
 
     _setColors() {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const palette = isDark ? PALETTES.dark : PALETTES.light;
+      const palette = PALETTES.dark;
       for (let i = 0; i < CONFIG.count; i++) {
         const color = new THREE.Color(palette[i % palette.length]);
         this.mesh.setColorAt(i, color);
@@ -239,12 +238,6 @@
         clearTimeout(this._resizeTimer);
         this._resizeTimer = setTimeout(() => this._resize(), 100);
       };
-
-      this._themeObserver = new MutationObserver(() => this._setColors());
-      this._themeObserver.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['data-theme'],
-      });
 
       this._intersectionObs = new IntersectionObserver(
         (entries) => {
@@ -324,7 +317,6 @@
       this.disposed = true;
       this._stop();
       this._intersectionObs?.disconnect();
-      this._themeObserver?.disconnect();
       window.removeEventListener('pointermove', this._onPointerMove);
       window.removeEventListener('touchmove',   this._onTouchMove);
       window.removeEventListener('resize',      this._onResize);

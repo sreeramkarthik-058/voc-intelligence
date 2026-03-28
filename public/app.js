@@ -2,34 +2,6 @@
    Customer Sentiment Analysis — Frontend Logic
    ═══════════════════════════════════════════════════════════════ */
 
-// ─── Dark mode ────────────────────────────────────────────────────
-
-function initDarkMode() {
-  const saved = localStorage.getItem('voc-theme');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const isDark = saved === 'dark' || (!saved && prefersDark);
-  if (isDark) applyDarkMode(true, false);
-}
-
-function applyDarkMode(dark, save = true) {
-  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-  const btn = document.getElementById('dark-toggle');
-  if (btn) btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
-  if (save) localStorage.setItem('voc-theme', dark ? 'dark' : 'light');
-}
-
-initDarkMode();
-
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('dark-toggle');
-  if (btn) {
-    btn.addEventListener('click', () => {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      applyDarkMode(!isDark);
-    });
-  }
-});
-
 // ─── Hero → Wizard bridge ─────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -422,8 +394,7 @@ $('new-analysis-btn').addEventListener('click', () => {
   if (hero) {
     hero.classList.remove('hidden');
     document.getElementById('steps').classList.add('hidden');
-    const heroTA = document.getElementById('hero-feedback-text');
-    if (heroTA) heroTA.value = '';
+    // Preserve feedback text so user can re-analyse or tweak
   }
   // Hide wizard panels (don't call goToStep so hero stays visible)
   Object.values(panels).forEach(p => p && p.classList.remove('active'));
