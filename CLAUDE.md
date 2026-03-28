@@ -1,6 +1,6 @@
-# Unfiltered
+# UNFILTERED
 
-AI-powered customer feedback analysis tool. Branded as "Unfiltered — raw customer truth, no sugar coating." Built by @nocodepm (Sreeram Karthik Sonti). Paste text or upload CSV/Word docs → Claude Haiku analyzes themes & sentiment → generates downloadable .pptx executive presentations.
+AI-powered customer feedback analysis tool. Branded as "UNFILTERED — raw customer truth, no sugar coating." Built by @nocodepm (Sreeram Karthik Sonti). Paste text or upload CSV/Word docs → Claude Haiku analyzes themes & sentiment → generates downloadable .pptx executive presentations.
 
 ## Tech stack
 
@@ -14,8 +14,9 @@ Frontend: HTML, CSS, vanilla JS · Backend: Node.js + Express · AI: Claude Haik
 - `utils/fileParser.js` — CSV and Word parsing
 - `utils/templateParser.js` — extracts theme from .pptx
 - `public/index.html` — frontend UI
-- `public/app.js` — frontend logic (wizard, tabs, dark mode, slide viewer)
-- `public/styles.css` — design system with dark mode
+- `public/app.js` — frontend logic (wizard, tabs, slide viewer)
+- `public/styles.css` — design system
+- `public/hero.css` — hero section styles (bubbles, sticky header, branding)
 
 ## IMPORTANT: Rules Claude Code must always follow
 
